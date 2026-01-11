@@ -1,98 +1,93 @@
-# 11 - Bônus: Site Estático
+# 11 - Bonus: Site Estatico
 
-[Voltar ao Índice](./00-INDICE.md) | [Anterior: Adminer](./10-BONUS-ADMINER.md)
-
----
-
-## Sumário
-
-1. [Visão Geral](#1-visão-geral)
-2. [Dockerfile](#2-dockerfile)
-3. [Página HTML](#3-página-html)
-4. [Estilos CSS](#4-estilos-css)
-5. [Docker Compose](#5-docker-compose)
-6. [Testes e Validação](#6-testes-e-validação)
+[Voltar ao Indice](./00-INDICE.md) | [Anterior: Adminer](./10-BONUS-ADMINER.md)
 
 ---
 
-## 1. Visão Geral
+## Sumario
 
-O subject pede um site estático em **qualquer linguagem exceto PHP**. Vamos criar um site de apresentação/currículo usando:
+1. [Visao Geral](#1-visao-geral)
+2. [Estrutura de Arquivos](#2-estrutura-de-arquivos)
+3. [Dockerfile](#3-dockerfile)
+4. [Configuracao NGINX](#4-configuracao-nginx)
+5. [Pagina HTML](#5-pagina-html)
+6. [Estilos CSS](#6-estilos-css)
+7. [Docker Compose](#7-docker-compose)
+8. [Testes e Validacao](#8-testes-e-validacao)
+
+---
+
+## 1. Visao Geral
+
+O subject pede um site estatico em qualquer linguagem exceto PHP. Este site e um portfolio pessoal baseado no curriculo da 42, usando apenas:
 
 - HTML5
 - CSS3
-- JavaScript (vanilla)
 
-### Arquivos a Criar
+Sem JavaScript, sem importacoes externas, 100% estatico.
+
+### Caracteristicas
+
+- Design moderno e responsivo
+- Tema escuro com cores ciano e roxo
+- Secoes: Hero, Sobre, Skills, Projetos (por Rank), Contato
+- Todos os projetos do curriculo 42 documentados
+- Barras de progresso para habilidades
+- Cards com efeitos hover
+
+---
+
+## 2. Estrutura de Arquivos
 
 ```
 srcs/requirements/bonus/static-site/
 ├── Dockerfile
-├── .dockerignore
 ├── conf/
 │   └── nginx.conf
 └── www/
     ├── index.html
-    ├── style.css
-    └── script.js
+    └── style.css
 ```
 
 ---
 
-## 2. Dockerfile
+## 3. Dockerfile
 
 ### srcs/requirements/bonus/static-site/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                          STATIC SITE DOCKERFILE                              #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: NGINX servindo site estático                                       #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Instalar NGINX e utilitários
-# curl: necessário para healthcheck
-# procps: necessário para verificação de PID 1 (ps)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     curl \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretórios
 RUN mkdir -p /var/www/static \
     && mkdir -p /run/nginx
 
-# Copiar arquivos do site
 COPY www/ /var/www/static/
 
-# Copiar configuração NGINX
 COPY conf/nginx.conf /etc/nginx/nginx.conf
 
-# Ajustar permissões
 RUN chown -R www-data:www-data /var/www/static
 
-# Expor porta
 EXPOSE 8081
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8081/ || exit 1
 
-# Iniciar NGINX
 CMD ["nginx", "-g", "daemon off;"]
 ```
+
+---
+
+## 4. Configuracao NGINX
 
 ### srcs/requirements/bonus/static-site/conf/nginx.conf
 
 ```nginx
-# ============================================================================ #
-#                     NGINX - STATIC SITE CONFIGURATION                        #
-# ============================================================================ #
-
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -122,7 +117,6 @@ http {
             try_files $uri $uri/ =404;
         }
 
-        # Cache para arquivos estáticos
         location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
             expires 1y;
             add_header Cache-Control "public, immutable";
@@ -133,7 +127,7 @@ http {
 
 ---
 
-## 3. Página HTML
+## 5. Pagina HTML
 
 ### srcs/requirements/bonus/static-site/www/index.html
 
@@ -145,620 +139,1098 @@ http {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Portfolio de peda-cos - Estudante 42 São Paulo"
+      content="Portfólio de Pedro da Costa e Silva Monteiro - Cadete 42 São Paulo"
     />
-    <title>peda-cos | 42 São Paulo</title>
+    <title>Pedro Monteiro | 42 São Paulo</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="container">
-      <!-- Header -->
-      <header class="header">
-        <nav class="nav">
-          <div class="logo">peda-cos</div>
-          <ul class="nav-links">
-            <li><a href="#about">Sobre</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#projects">Projetos</a></li>
-            <li><a href="#contact">Contato</a></li>
-          </ul>
-        </nav>
-      </header>
-
-      <!-- Hero Section -->
-      <section class="hero">
-        <div class="hero-content">
-          <h1>Olá, eu sou <span class="highlight">peda-cos</span></h1>
-          <p class="subtitle">Estudante de programação na 42 São Paulo</p>
-          <p class="description">
-            Apaixonado por tecnologia, desenvolvimento de software e resolução
-            de problemas complexos.
+    <header class="hero">
+      <nav class="nav">
+        <div class="nav-logo">peda-cos</div>
+        <ul class="nav-links">
+          <li><a href="#about">Sobre</a></li>
+          <li><a href="#skills">Skills</a></li>
+          <li><a href="#projects">Projetos</a></li>
+          <li><a href="#contact">Contato</a></li>
+        </ul>
+      </nav>
+      <div class="hero-content">
+        <div class="hero-text">
+          <span class="hero-tag">Cadete 42 São Paulo</span>
+          <h1>Pedro da Costa e Silva Monteiro</h1>
+          <p class="hero-description">
+            Desenvolvedor em formação com foco em programação de sistemas,
+            algoritmos e desenvolvimento de software. Atualmente no Rank 5 do
+            Common Core da 42.
           </p>
-          <a href="#projects" class="cta-button">Ver Projetos</a>
-        </div>
-        <div class="hero-image">
-          <div class="terminal">
-            <div class="terminal-header">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-number">17</span>
+              <span class="stat-label">Projetos</span>
             </div>
-            <div class="terminal-body">
-              <p><span class="prompt">$</span> whoami</p>
-              <p class="output">peda-cos</p>
-              <p><span class="prompt">$</span> cat skills.txt</p>
-              <p class="output">C, Shell, Docker, Git</p>
-              <p><span class="prompt">$</span> echo "42 SP"</p>
-              <p class="output">42 SP</p>
-              <p><span class="prompt">$</span> <span class="cursor">_</span></p>
+            <div class="stat">
+              <span class="stat-number">1250+</span>
+              <span class="stat-label">Horas</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">Rank 5</span>
+              <span class="stat-label">Nível</span>
             </div>
           </div>
+          <a href="#about" class="scroll-indicator">
+            <span class="scroll-text">Role para baixo</span>
+            <span class="scroll-arrow">&#8595;</span>
+          </a>
         </div>
-      </section>
+      </div>
+    </header>
 
-      <!-- About Section -->
+    <main>
       <section id="about" class="section">
-        <h2>Sobre Mim</h2>
-        <div class="about-content">
-          <p>
-            Sou estudante na <strong>42 São Paulo</strong>, uma escola de
-            programação inovadora baseada em aprendizado peer-to-peer. Estou
-            constantemente buscando novos desafios e oportunidades de
-            crescimento.
-          </p>
-          <p>
-            Este site foi criado como parte do projeto
-            <strong>Inception</strong>, demonstrando conhecimentos em Docker,
-            containerização e infraestrutura.
-          </p>
-        </div>
-      </section>
-
-      <!-- Skills Section -->
-      <section id="skills" class="section">
-        <h2>Habilidades</h2>
-        <div class="skills-grid">
-          <div class="skill-card">
-            <div class="skill-icon">C</div>
-            <h3>Linguagem C</h3>
-            <p>Programação de baixo nível, gerenciamento de memória</p>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">$_</div>
-            <h3>Shell/Bash</h3>
-            <p>Scripts, automação, administração de sistemas</p>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">D</div>
-            <h3>Docker</h3>
-            <p>Containerização, Docker Compose, DevOps</p>
-          </div>
-          <div class="skill-card">
-            <div class="skill-icon">G</div>
-            <h3>Git</h3>
-            <p>Controle de versão, colaboração, workflows</p>
+        <div class="container">
+          <h2 class="section-title">Sobre Mim</h2>
+          <div class="about-content">
+            <div class="about-card">
+              <div class="about-icon">42</div>
+              <h3>Formação 42</h3>
+              <p>
+                Iniciado em Outubro de 2024, após passar na seleção em Agosto de
+                2024. A 42 é uma escola global de tecnologia com metodologia
+                peer-to-peer e aprendizado baseado em projetos.
+              </p>
+            </div>
+            <div class="about-card">
+              <div class="about-icon">C</div>
+              <h3>Programação em C</h3>
+              <p>
+                Domínio sólido da linguagem C, incluindo gerenciamento de
+                memória, ponteiros, estruturas de dados e programação de
+                sistemas Unix.
+              </p>
+            </div>
+            <div class="about-card">
+              <div class="about-icon">++</div>
+              <h3>C++ e OOP</h3>
+              <p>
+                Conhecimento em programação orientada a objetos com C++,
+                incluindo classes, herança, polimorfismo, templates e tratamento
+                de exceções.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Projects Section -->
+      <section id="skills" class="section section-dark">
+        <div class="container">
+          <h2 class="section-title">Habilidades</h2>
+          <div class="skills-grid">
+            <div class="skill-category">
+              <h3>Algoritmos e IA</h3>
+              <p>
+                Algoritmos clássicos, estruturas de dados e lógica assíncrona
+              </p>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: 85%;"></div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>Programação Imperativa</h3>
+              <p>
+                Programação em C, gerenciamento de memória e estruturas de dados
+              </p>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: 95%;"></div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>Programação Orientada a Objetos</h3>
+              <p>Classes C++, herança, templates e abstração</p>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: 80%;"></div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>Programação de Sistemas</h3>
+              <p>
+                System calls Unix, manipulação de arquivos e controle de
+                processos
+              </p>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: 90%;"></div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>Gráficos</h3>
+              <p>
+                Manipulação de imagens, desenho de formas e programação
+                orientada a eventos
+              </p>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: 85%;"></div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>Redes e Sysadmin</h3>
+              <p>
+                Configuração de sistemas Linux, gerenciamento de usuários e
+                serviços de rede
+              </p>
+              <div class="skill-bar">
+                <div class="skill-progress" style="width: 75%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="projects" class="section">
-        <h2>Projetos</h2>
-        <div class="projects-grid">
-          <div class="project-card">
-            <h3>Inception</h3>
-            <p>Infraestrutura Docker com NGINX, WordPress e MariaDB</p>
-            <div class="tags">
-              <span>Docker</span>
-              <span>NGINX</span>
-              <span>TLS</span>
+        <div class="container">
+          <h2 class="section-title">Projetos</h2>
+
+          <div class="rank-section">
+            <h3 class="rank-title"><span class="rank-badge">Rank 0</span></h3>
+            <div class="projects-grid">
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>Libft</h4>
+                  <span class="project-grade grade-bonus">125</span>
+                </div>
+                <p>
+                  Reimplementação de funções chave da biblioteca padrão C e
+                  utilitários customizados.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="workload">70h</span>
+                </div>
+              </article>
             </div>
           </div>
-          <div class="project-card">
-            <h3>Libft</h3>
-            <p>Biblioteca C com funções padrão reimplementadas</p>
-            <div class="tags">
-              <span>C</span>
-              <span>Makefile</span>
+
+          <div class="rank-section">
+            <h3 class="rank-title"><span class="rank-badge">Rank 1</span></h3>
+            <div class="projects-grid">
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>ft_printf</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Printf customizado usando funções variádicas e especificadores
+                  de formato em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="workload">70h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>Born2beroot</h4>
+                  <span class="project-grade grade-bonus">125</span>
+                </div>
+                <p>
+                  Introdução à administração de sistemas e virtualização com
+                  Linux.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">Sysadmin</span>
+                  <span class="workload">40h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>get_next_line</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Leitura de arquivo ou input linha por linha com gerenciamento
+                  de buffer em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="workload">70h</span>
+                </div>
+              </article>
             </div>
           </div>
-          <div class="project-card">
-            <h3>ft_printf</h3>
-            <p>Reimplementação da função printf</p>
-            <div class="tags">
-              <span>C</span>
-              <span>Variadic</span>
+
+          <div class="rank-section">
+            <h3 class="rank-title"><span class="rank-badge">Rank 2</span></h3>
+            <div class="projects-grid">
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>FdF</h4>
+                  <span class="project-grade grade-bonus">115</span>
+                </div>
+                <p>
+                  Renderização de wireframe 3D usando janela gráfica básica e
+                  tratamento de eventos em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="tag">Graphics</span>
+                  <span class="workload">60h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>push_swap</h4>
+                  <span class="project-grade">96</span>
+                </div>
+                <p>
+                  Ordenação de uma pilha com conjunto mínimo de operações usando
+                  algoritmos de ordenação em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="tag">Algorithms</span>
+                  <span class="workload">60h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>pipex</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Implementação da mecânica de pipe UNIX para conectar processos
+                  e gerenciar I/O em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="tag">Unix</span>
+                  <span class="workload">50h</span>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="rank-section">
+            <h3 class="rank-title"><span class="rank-badge">Rank 3</span></h3>
+            <div class="projects-grid">
+              <article class="project-card featured">
+                <div class="project-header">
+                  <h4>minishell</h4>
+                  <span class="project-grade">101</span>
+                </div>
+                <p>
+                  Construção de um shell simples tratando comandos, paths e
+                  variáveis de ambiente em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="tag">Unix</span>
+                  <span class="tag">Group</span>
+                  <span class="workload">210h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>Philosophers</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Aprendizado de concorrência usando threads e mutexes no
+                  problema dos filósofos em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="tag">Threads</span>
+                  <span class="workload">70h</span>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="rank-section">
+            <h3 class="rank-title"><span class="rank-badge">Rank 4</span></h3>
+            <div class="projects-grid">
+              <article class="project-card featured">
+                <div class="project-header">
+                  <h4>cub3d</h4>
+                  <span class="project-grade grade-bonus">125</span>
+                </div>
+                <p>
+                  Visualizador de labirinto 3D baseado em raycasting inspirado
+                  em jogos FPS dos anos 90 em C.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C</span>
+                  <span class="tag">Graphics</span>
+                  <span class="tag">Group</span>
+                  <span class="workload">280h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>NetPractice</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Configuração de roteamento IP e sub-redes para construir
+                  conexões de rede funcionais.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">Network</span>
+                  <span class="workload">50h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>CPP Modules 00-04</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Fundamentos de C++: namespaces, classes, OOP, memória,
+                  referências, polimorfismo, herança e classes abstratas.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C++</span>
+                  <span class="tag">OOP</span>
+                  <span class="workload">70h</span>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="rank-section">
+            <h3 class="rank-title"><span class="rank-badge">Rank 5</span></h3>
+            <div class="projects-grid">
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>CPP Module 05</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Tratamento de exceções com try/catch e gerenciamento de erros
+                  em C++.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C++</span>
+                  <span class="tag">Exceptions</span>
+                  <span class="workload">25h</span>
+                </div>
+              </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>CPP Module 06</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Aplicação correta de static, dynamic, const e reinterpret
+                  casts em C++.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C++</span>
+                  <span class="tag">Casts</span>
+                  <span class="workload">25h</span>
+                </div>
+              </article>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Contact Section -->
-      <section id="contact" class="section">
-        <h2>Contato</h2>
-        <div class="contact-info">
-          <p>Entre em contato comigo:</p>
-          <ul>
-            <li>
-              Email:
-              <a href="mailto:peda-cos@student.42sp.org.br"
-                >peda-cos@student.42sp.org.br</a
-              >
-            </li>
-            <li>
-              GitHub:
-              <a href="https://github.com/peda-cos" target="_blank"
-                >github.com/peda-cos</a
-              >
-            </li>
-            <li>
-              LinkedIn:
-              <a href="https://linkedin.com/in/peda-cos" target="_blank"
-                >linkedin.com/in/peda-cos</a
-              >
-            </li>
-          </ul>
+      <section id="contact" class="section section-dark">
+        <div class="container">
+          <h2 class="section-title">Contato</h2>
+          <div class="contact-content">
+            <div class="contact-info">
+              <div class="contact-item">
+                <span class="contact-label">Intra 42</span>
+                <span class="contact-value">peda-cos</span>
+              </div>
+              <div class="contact-item">
+                <span class="contact-label">Campus</span>
+                <span class="contact-value">42 São Paulo</span>
+              </div>
+              <div class="contact-item">
+                <span class="contact-label">Origem</span>
+                <span class="contact-value">Cuiabá, Mato Grosso</span>
+              </div>
+              <div class="contact-item">
+                <span class="contact-label">Status</span>
+                <span class="contact-value">Common Core em progresso</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+    </main>
 
-      <!-- Footer -->
-      <footer class="footer">
-        <p>Feito com HTML, CSS e JavaScript - Projeto Inception</p>
-        <p>&copy; 2024 peda-cos | 42 São Paulo</p>
-      </footer>
-    </div>
-
-    <script src="script.js"></script>
+    <footer class="footer">
+      <div class="container">
+        <p>Pedro da Costa e Silva Monteiro - 42 São Paulo</p>
+      </div>
+    </footer>
   </body>
 </html>
 ```
 
 ---
 
-## 4. Estilos CSS
+## 6. Estilos CSS
 
 ### srcs/requirements/bonus/static-site/www/style.css
 
-```css
-/* ============================================================================
-   STATIC SITE STYLES - peda-cos Portfolio
-   ============================================================================ */
+O CSS utiliza variaveis CSS para cores e espacamentos, com design responsivo.
 
-/* Reset e variáveis */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+```css
+:root {
+  --color-bg: #0a0a0f;
+  --color-bg-alt: #12121a;
+  --color-bg-card: #1a1a25;
+  --color-primary: #00babc;
+  --color-primary-light: #00e5e8;
+  --color-secondary: #7c3aed;
+  --color-accent: #f59e0b;
+  --color-text: #e4e4e7;
+  --color-text-muted: #a1a1aa;
+  --color-border: #27272a;
+  --color-success: #10b981;
+  --font-main:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:
+    ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+  --radius: 12px;
+  --radius-sm: 6px;
+  --shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg:
+    0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-:root {
-  --primary: #00d4ff;
-  --secondary: #7c3aed;
-  --background: #0f0f23;
-  --surface: #1a1a2e;
-  --text: #e0e0e0;
-  --text-muted: #888;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --error: #f87171;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--background);
-  color: var(--text);
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
-/* Header */
-.header {
+.nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(15, 15, 35, 0.95);
-  backdrop-filter: blur(10px);
   z-index: 100;
-  padding: 15px 0;
-}
-
-.nav {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 15, 0.95),
+    rgba(10, 10, 15, 0.8)
+  );
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.logo {
+.nav-logo {
+  font-family: var(--font-mono);
   font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--primary);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
 }
 
 .nav-links {
   display: flex;
+  gap: 32px;
   list-style: none;
-  gap: 30px;
 }
 
 .nav-links a {
-  color: var(--text);
+  color: var(--color-text-muted);
   text-decoration: none;
-  transition: color 0.3s;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transition: var(--transition);
 }
 
 .nav-links a:hover {
-  color: var(--primary);
+  color: var(--color-text);
 }
 
-/* Hero Section */
+.nav-links a:hover::after {
+  width: 100%;
+}
+
 .hero {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 80px;
-  gap: 50px;
+  flex-direction: column;
+  background: var(--color-bg);
+  background-image:
+    radial-gradient(
+      ellipse at 20% 20%,
+      rgba(0, 186, 188, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 80%,
+      rgba(124, 58, 237, 0.08) 0%,
+      transparent 50%
+    );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
 }
 
 .hero-content {
   flex: 1;
-}
-
-.hero h1 {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-
-.highlight {
-  color: var(--primary);
-}
-
-.subtitle {
-  font-size: 1.5rem;
-  color: var(--secondary);
-  margin-bottom: 15px;
-}
-
-.description {
-  color: var(--text-muted);
-  margin-bottom: 30px;
-  max-width: 500px;
-}
-
-.cta-button {
-  display: inline-block;
-  padding: 12px 30px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
-  text-decoration: none;
-  border-radius: 30px;
-  font-weight: bold;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
-}
-
-.cta-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
-}
-
-/* Terminal */
-.hero-image {
-  flex: 1;
-}
-
-.terminal {
-  background: var(--surface);
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  max-width: 400px;
-}
-
-.terminal-header {
-  background: #2d2d44;
-  padding: 10px 15px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 40px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-text {
+  max-width: 800px;
+  text-align: center;
+}
+
+.hero-tag {
+  display: inline-block;
+  padding: 8px 20px;
+  background: rgba(0, 186, 188, 0.1);
+  border: 1px solid rgba(0, 186, 188, 0.3);
+  border-radius: 50px;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+
+.hero-text h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  background: linear-gradient(
+    135deg,
+    var(--color-text) 0%,
+    var(--color-primary-light) 50%,
+    var(--color-secondary) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  max-width: 600px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  font-family: var(--font-mono);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.scroll-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: var(--transition);
 }
 
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.scroll-indicator:hover {
+  color: var(--color-primary);
 }
 
-.dot.red {
-  background: var(--error);
-}
-.dot.yellow {
-  background: var(--warning);
-}
-.dot.green {
-  background: var(--success);
+.scroll-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
-.terminal-body {
-  padding: 20px;
-  font-family: "Courier New", monospace;
-  font-size: 0.9rem;
+.scroll-arrow {
+  font-size: 1.5rem;
+  animation: bounce 2s infinite;
 }
 
-.terminal-body p {
-  margin-bottom: 5px;
-}
-
-.prompt {
-  color: var(--success);
-}
-
-.output {
-  color: var(--text-muted);
-  margin-left: 20px;
-}
-
-.cursor {
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
+@keyframes bounce {
   0%,
-  50% {
-    opacity: 1;
-  }
-  51%,
+  20%,
+  50%,
+  80%,
   100% {
-    opacity: 0;
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(8px);
+  }
+  60% {
+    transform: translateY(4px);
   }
 }
 
-/* Sections */
 .section {
   padding: 100px 0;
 }
 
-.section h2 {
+.section-dark {
+  background: var(--color-bg-alt);
+}
+
+.section-title {
   font-size: 2.5rem;
+  font-weight: 800;
   text-align: center;
-  margin-bottom: 50px;
-  color: var(--primary);
+  margin-bottom: 60px;
+  position: relative;
 }
 
-/* About */
-.about-content {
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.about-content p {
-  margin-bottom: 20px;
-  color: var(--text-muted);
-}
-
-/* Skills */
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 30px;
-}
-
-.skill-card {
-  background: var(--surface);
-  padding: 30px;
-  border-radius: 15px;
-  text-align: center;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
-}
-
-.skill-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
-}
-
-.skill-icon {
+.section-title::after {
+  content: "";
+  display: block;
   width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  border-radius: 50%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
+  margin: 20px auto 0;
+  border-radius: 2px;
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.about-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.about-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.about-icon {
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px;
-  font-weight: bold;
+  margin: 0 auto 24px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 186, 188, 0.1),
+    rgba(124, 58, 237, 0.1)
+  );
+  border: 1px solid rgba(0, 186, 188, 0.3);
+  border-radius: 50%;
+  font-family: var(--font-mono);
   font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
 }
 
-.skill-card h3 {
-  margin-bottom: 10px;
+.about-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  color: var(--color-text);
 }
 
-.skill-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
+.about-card p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
-/* Projects */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+}
+
+.skill-category {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: var(--transition);
+}
+
+.skill-category:hover {
+  border-color: var(--color-primary);
+}
+
+.skill-category h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.skill-category p {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.skill-bar {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.skill-progress {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
+  border-radius: 3px;
+  transition: width 1s ease-out;
+}
+
+.rank-section {
+  margin-bottom: 48px;
+}
+
+.rank-title {
+  margin-bottom: 24px;
+}
+
+.rank-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-primary);
+  border-radius: 50px;
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
 }
 
 .project-card {
-  background: var(--surface);
-  padding: 30px;
-  border-radius: 15px;
-  border-left: 4px solid var(--primary);
-  transition: transform 0.3s;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: var(--transition);
 }
 
 .project-card:hover {
-  transform: translateX(10px);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
 }
 
-.project-card h3 {
-  color: var(--primary);
-  margin-bottom: 15px;
+.project-card.featured {
+  border-color: var(--color-secondary);
+  background: linear-gradient(
+    135deg,
+    var(--color-bg-card),
+    rgba(124, 58, 237, 0.1)
+  );
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.project-header h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+.project-grade {
+  padding: 4px 12px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 50px;
+  color: var(--color-success);
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.project-grade.grade-bonus {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--color-accent);
 }
 
 .project-card p {
-  color: var(--text-muted);
-  margin-bottom: 20px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
 }
 
-.tags {
+.project-meta {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
-.tags span {
-  background: rgba(0, 212, 255, 0.1);
-  color: var(--primary);
-  padding: 5px 15px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+.tag {
+  padding: 4px 10px;
+  background: rgba(0, 186, 188, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* Contact */
+.workload {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+.contact-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 .contact-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.contact-item {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
   text-align: center;
+  transition: var(--transition);
 }
 
-.contact-info ul {
-  list-style: none;
-  margin-top: 20px;
+.contact-item:hover {
+  border-color: var(--color-primary);
 }
 
-.contact-info li {
-  margin-bottom: 15px;
+.contact-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
 }
 
-.contact-info a {
-  color: var(--primary);
-  text-decoration: none;
+.contact-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
-.contact-info a:hover {
-  text-decoration: underline;
-}
-
-/* Footer */
 .footer {
-  text-align: center;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
   padding: 40px 0;
-  border-top: 1px solid var(--surface);
-  color: var(--text-muted);
+  text-align: center;
 }
 
 .footer p {
-  margin-bottom: 10px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-  }
+.footer-note {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
 
-  .hero h1 {
-    font-size: 2rem;
+@media (max-width: 768px) {
+  .nav {
+    padding: 16px 24px;
   }
 
   .nav-links {
     display: none;
   }
 
-  .terminal {
-    max-width: 100%;
+  .hero-content {
+    padding: 100px 24px 60px;
+  }
+
+  .hero-stats {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .section {
+    padding: 60px 0;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 40px;
+  }
+
+  .about-content,
+  .skills-grid,
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-info {
+    grid-template-columns: 1fr;
+  }
+
+  .project-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .workload {
+    margin-left: 0;
   }
 }
-```
 
-### srcs/requirements/bonus/static-site/www/script.js
+@media (prefers-reduced-motion: no-preference) {
+  .about-card,
+  .skill-category,
+  .project-card,
+  .contact-item {
+    opacity: 1;
+  }
+}
 
-```javascript
-// ============================================================================
-// STATIC SITE JAVASCRIPT - peda-cos Portfolio
-// ============================================================================
+::selection {
+  background: var(--color-primary);
+  color: var(--color-bg);
+}
 
-// Smooth scroll para links de navegação
-document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-  anchor.addEventListener("click", function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute("href"));
-    if (target) {
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  });
-});
+::-webkit-scrollbar {
+  width: 8px;
+}
 
-// Animação de fade-in para seções
-const observerOptions = {
-  root: null,
-  rootMargin: "0px",
-  threshold: 0.1,
-};
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = "1";
-      entry.target.style.transform = "translateY(0)";
-    }
-  });
-}, observerOptions);
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
 
-document.querySelectorAll(".section").forEach((section) => {
-  section.style.opacity = "0";
-  section.style.transform = "translateY(30px)";
-  section.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-  observer.observe(section);
-});
-
-// Console easter egg
-console.log(
-  "%c42 São Paulo",
-  "font-size: 30px; color: #00d4ff; font-weight: bold;",
-);
-console.log(
-  "%cpeda-cos - Inception Project",
-  "font-size: 14px; color: #7c3aed;",
-);
-console.log("Criado com Docker, NGINX e muito café ☕");
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
 ```
 
 ---
 
-## 5. Docker Compose
+## 7. Docker Compose
 
 ### Adicionar ao docker-compose.yml
 
 ```yaml
 services:
-  # ... serviços existentes ...
-
-  # ========================================================================== #
-  #                              STATIC SITE                                   #
-  # ========================================================================== #
-
   static-site:
     build:
       context: ./requirements/bonus/static-site
@@ -780,33 +1252,33 @@ services:
 
 ---
 
-## 6. Testes e Validação
+## 8. Testes e Validacao
 
-### Iniciar Site Estático
+### Iniciar Site Estatico
 
 ```bash
-# Construir e iniciar
 docker compose -f srcs/docker-compose.yml build static-site
 docker compose -f srcs/docker-compose.yml up -d static-site
-
-# Ver logs
 docker compose -f srcs/docker-compose.yml logs static-site
 ```
 
 ### Acessar o Site
 
-Abra no navegador: `http://peda-cos.42.fr:8081`
+Abra no navegador: `http://localhost:8081`
 
-### Verificar
+### Checklist de Verificacao
 
-- [ ] Página carrega corretamente
-- [ ] Navegação funciona
-- [ ] Animações funcionam
+- [ ] Pagina carrega corretamente
+- [ ] Navegacao funciona (scroll suave via CSS)
 - [ ] Responsivo (testar em diferentes tamanhos)
-- [ ] Não usa PHP (requisito do subject)
+- [ ] Sem JavaScript (requisito atendido)
+- [ ] Sem PHP (requisito do subject)
+- [ ] Sem importacoes externas (fontes, CDN, etc)
+- [ ] Todos os projetos do curriculo 42 listados
+- [ ] Notas e carga horaria corretas
 
 ---
 
-## Próxima Etapa
+## Proxima Etapa
 
 [Ir para 12-BONUS-PORTAINER.md](./12-BONUS-PORTAINER.md)

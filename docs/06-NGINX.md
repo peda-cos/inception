@@ -50,16 +50,8 @@ srcs/requirements/nginx/
 ### srcs/requirements/nginx/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                            NGINX + TLS DOCKERFILE                            #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: NGINX com TLS                                                      #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Instalar NGINX, OpenSSL e ferramentas necessárias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     openssl \
@@ -67,34 +59,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretórios necessários
 RUN mkdir -p /etc/nginx/ssl \
     && mkdir -p /var/www/html \
     && mkdir -p /var/log/nginx \
     && mkdir -p /run/nginx
 
-# Copiar script de geração de SSL
 COPY tools/setup-ssl.sh /usr/local/bin/setup-ssl.sh
 RUN chmod +x /usr/local/bin/setup-ssl.sh
 
-# Gerar certificados SSL
 RUN /usr/local/bin/setup-ssl.sh
 
-# Copiar configuração do NGINX
 COPY conf/nginx.conf /etc/nginx/nginx.conf
 
-# Ajustar permissões
 RUN chown -R www-data:www-data /var/www/html \
     && chown -R www-data:www-data /var/log/nginx
 
-# Expor porta HTTPS
 EXPOSE 443
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -fsk https://localhost/health || exit 1
 
-# Comando para executar NGINX em foreground
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
@@ -123,20 +107,14 @@ Este script gera o certificado autoassinado para o domínio.
 #!/bin/bash
 set -e
 
-# ============================================================================ #
-#                           SSL CERTIFICATE GENERATOR                          #
-# ============================================================================ #
-
 SSL_DIR="/etc/nginx/ssl"
 DOMAIN="${DOMAIN_NAME:-peda-cos.42.fr}"
 DAYS_VALID=365
 
 echo "[INFO] Gerando certificado SSL para: $DOMAIN"
 
-# Criar diretório se não existir
 mkdir -p "$SSL_DIR"
 
-# Gerar chave privada e certificado autoassinado
 openssl req -x509 \
     -nodes \
     -days $DAYS_VALID \
@@ -146,11 +124,9 @@ openssl req -x509 \
     -subj "/C=BR/ST=Sao Paulo/L=Sao Paulo/O=42SP/OU=Inception/CN=$DOMAIN" \
     -addext "subjectAltName=DNS:$DOMAIN,DNS:www.$DOMAIN,IP:127.0.0.1"
 
-# Gerar parâmetros Diffie-Hellman (para segurança adicional)
-# Comentado por ser demorado - descomente se quiser mais segurança
+# DH params generation is slow; uncomment for production-grade forward secrecy
 # openssl dhparam -out "$SSL_DIR/dhparam.pem" 2048
 
-# Ajustar permissões
 chmod 600 "$SSL_DIR/inception.key"
 chmod 644 "$SSL_DIR/inception.crt"
 
@@ -176,14 +152,6 @@ ls -la "$SSL_DIR"
 ### srcs/requirements/nginx/conf/nginx.conf
 
 ```nginx
-# ============================================================================ #
-#                           NGINX CONFIGURATION                                #
-#                                                                              #
-#  - TLSv1.2 e TLSv1.3 apenas (requisito do subject)                          #
-#  - Reverse proxy para WordPress PHP-FPM                                      #
-#  - Porta 443 única                                                           #
-# ============================================================================ #
-
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -196,27 +164,22 @@ events {
 }
 
 http {
-    # Tipos MIME
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
 
-    # Logging
     log_format main '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
                     '"$http_user_agent" "$http_x_forwarded_for"';
     access_log /var/log/nginx/access.log main;
 
-    # Performance
     sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
     types_hash_max_size 2048;
 
-    # Segurança - esconder versão
     server_tokens off;
 
-    # Gzip
     gzip on;
     gzip_vary on;
     gzip_proxied any;
@@ -224,121 +187,82 @@ http {
     gzip_types text/plain text/css text/xml application/json application/javascript
                application/xml application/xml+rss text/javascript;
 
-    # ========================================================================== #
-    #                            SERVIDOR HTTPS                                  #
-    # ========================================================================== #
-
     server {
-        # Escutar apenas HTTPS na porta 443
         listen 443 ssl http2;
         listen [::]:443 ssl http2;
 
-        # Nome do servidor
         server_name peda-cos.42.fr www.peda-cos.42.fr;
 
-        # ====================================================================== #
-        #                         CONFIGURAÇÃO SSL/TLS                           #
-        # ====================================================================== #
-
-        # Certificados
         ssl_certificate /etc/nginx/ssl/inception.crt;
         ssl_certificate_key /etc/nginx/ssl/inception.key;
 
-        # IMPORTANTE: Apenas TLSv1.2 e TLSv1.3 (requisito do subject)
+        # Subject requirement: only TLSv1.2 and TLSv1.3 allowed
         ssl_protocols TLSv1.2 TLSv1.3;
 
-        # Ciphers seguros
         ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
         ssl_prefer_server_ciphers off;
 
-        # Cache de sessão SSL
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 1d;
         ssl_session_tickets off;
 
-        # HSTS (opcional, mas recomendado)
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-        # ====================================================================== #
-        #                         DIRETÓRIO RAIZ                                 #
-        # ====================================================================== #
 
         root /var/www/html;
         index index.php index.html index.htm;
 
-        # ====================================================================== #
-        #                         LOCALIZAÇÕES                                   #
-        # ====================================================================== #
-
-        # Health check endpoint
         location /health {
             access_log off;
             return 200 "OK\n";
             add_header Content-Type text/plain;
         }
 
-        # Localização principal
         location / {
             try_files $uri $uri/ /index.php?$args;
         }
 
-        # Processar arquivos PHP via FastCGI (WordPress)
         location ~ \.php$ {
-            # Verificar se o arquivo existe
             try_files $uri =404;
 
-            # FastCGI para PHP-FPM
             fastcgi_split_path_info ^(.+\.php)(/.+)$;
             fastcgi_pass wordpress:9000;
             fastcgi_index index.php;
             fastcgi_read_timeout 300;
 
-            # Parâmetros FastCGI
             include fastcgi_params;
             fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
             fastcgi_param PATH_INFO $fastcgi_path_info;
             fastcgi_param HTTPS on;
 
-            # Buffer
             fastcgi_buffer_size 128k;
             fastcgi_buffers 256 16k;
             fastcgi_busy_buffers_size 256k;
             fastcgi_temp_file_write_size 256k;
         }
 
-        # Negar acesso a arquivos ocultos
         location ~ /\. {
             deny all;
             access_log off;
             log_not_found off;
         }
 
-        # Negar acesso a arquivos sensíveis do WordPress
         location ~* ^/(wp-config\.php|readme\.html|license\.txt) {
             deny all;
         }
 
-        # Cache de arquivos estáticos
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
             expires 1y;
             add_header Cache-Control "public, immutable";
             access_log off;
         }
 
-        # Limitar tamanho de upload
         client_max_body_size 64M;
 
-        # Timeout para uploads grandes
         client_body_timeout 300;
         send_timeout 300;
     }
 
-    # ========================================================================== #
-    #                     REDIRECIONAMENTO HTTP → HTTPS                          #
-    # ========================================================================== #
-    # Nota: O subject exige apenas porta 443, mas este redirecionamento é opcional
-    # Comente este bloco se não quiser expor a porta 80
-
+    # Subject requires only port 443; uncomment to redirect HTTP if port 80 is exposed
     # server {
     #     listen 80;
     #     listen [::]:80;

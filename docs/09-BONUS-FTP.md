@@ -59,45 +59,28 @@ srcs/requirements/bonus/ftp/
 ### srcs/requirements/bonus/ftp/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                             FTP SERVER DOCKERFILE                            #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: vsftpd (Very Secure FTP Daemon)                                    #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Instalar vsftpd e utilitários
-# procps: necessário para verificação de PID 1 (ps)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     vsftpd \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretórios necessários
 RUN mkdir -p /var/run/vsftpd/empty \
     && mkdir -p /var/log/vsftpd \
     && mkdir -p /etc/vsftpd
 
-# Copiar configuração
 COPY conf/vsftpd.conf /etc/vsftpd.conf
 
-# Copiar script de inicialização
 COPY tools/init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
-# Expor portas
-# 21: FTP control
-# 21100-21110: Passive mode data
 EXPOSE 21
 EXPOSE 21100-21110
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD pgrep vsftpd > /dev/null || exit 1
 
-# Iniciar vsftpd
 ENTRYPOINT ["/usr/local/bin/init.sh"]
 ```
 
@@ -108,76 +91,51 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 ### srcs/requirements/bonus/ftp/conf/vsftpd.conf
 
 ```conf
-# ============================================================================ #
-#                         VSFTPD CONFIGURATION                                 #
-# ============================================================================ #
-
-# Não rodar em background
+# Docker requires foreground process
 background=NO
 
-# Escutar IPv4
 listen=YES
 listen_ipv6=NO
 
-# Permitir usuários locais
 local_enable=YES
-
-# Permitir escrita
 write_enable=YES
-
-# Máscara de criação de arquivos
 local_umask=022
 
-# Habilitar mensagens de diretório
 dirmessage_enable=YES
-
-# Mostrar timestamps locais
 use_localtime=YES
 
-# Logging
 xferlog_enable=YES
 xferlog_std_format=YES
 log_ftp_protocol=YES
 vsftpd_log_file=/var/log/vsftpd/vsftpd.log
 
-# Porta de conexão
 connect_from_port_20=YES
 
-# Timeout
 idle_session_timeout=300
 data_connection_timeout=120
 
-# Modo passivo
 pasv_enable=YES
 pasv_min_port=21100
 pasv_max_port=21110
 pasv_address=127.0.0.1
 
-# Não permitir login anônimo
 anonymous_enable=NO
 
-# Chroot - manter usuários em seus diretórios
 chroot_local_user=YES
 allow_writeable_chroot=YES
 
-# Usar lista de usuários
 userlist_enable=YES
 userlist_file=/etc/vsftpd.userlist
 userlist_deny=NO
 
-# Diretório seguro
 secure_chroot_dir=/var/run/vsftpd/empty
 
-# PAM
 pam_service_name=vsftpd
 
-# Diretório local root
 local_root=/var/www/html
 
-# Suporte a caracteres UTF-8
 utf8_filesystem=YES
 
-# Porta do servidor
 listen_port=21
 ```
 
@@ -191,11 +149,6 @@ listen_port=21
 #!/bin/bash
 set -e
 
-# ============================================================================ #
-#                        FTP INITIALIZATION SCRIPT                             #
-# ============================================================================ #
-
-# Função para ler secrets
 read_secret() {
     local secret_file="$1"
     if [ -f "$secret_file" ]; then
@@ -205,47 +158,37 @@ read_secret() {
     fi
 }
 
-# Ler credenciais
 FTP_PASSWORD=$(read_secret "/run/secrets/ftp_password")
 
-# Usar senha padrão se não definida
 if [ -z "$FTP_PASSWORD" ]; then
     FTP_PASSWORD="ftppass123"
     echo "[WARN] Usando senha padrão para FTP"
 fi
 
-# Configurar usuário FTP
 FTP_USER="${FTP_USER:-ftpuser}"
 
 echo "[INFO] Configurando usuário FTP: $FTP_USER"
 
-# Criar usuário se não existir
 if ! id "$FTP_USER" > /dev/null 2>&1; then
     useradd -m -d /var/www/html -s /bin/bash "$FTP_USER"
 fi
 
-# Definir senha
 echo "$FTP_USER:$FTP_PASSWORD" | chpasswd
 
-# Ajustar permissões
 chown -R "$FTP_USER":www-data /var/www/html
 chmod -R 775 /var/www/html
 
-# Criar lista de usuários permitidos
 echo "$FTP_USER" > /etc/vsftpd.userlist
 
-# Criar diretório de logs
 mkdir -p /var/log/vsftpd
 touch /var/log/vsftpd/vsftpd.log
 
-# Atualizar pasv_address se DOMAIN_NAME estiver definido
 if [ -n "$DOMAIN_NAME" ]; then
     sed -i "s/pasv_address=.*/pasv_address=$DOMAIN_NAME/" /etc/vsftpd.conf
 fi
 
 echo "[INFO] Iniciando vsftpd..."
 
-# Usar exec para substituir shell
 exec vsftpd /etc/vsftpd.conf
 ```
 
@@ -258,10 +201,6 @@ exec vsftpd /etc/vsftpd.conf
 ```yaml
 services:
   # ... serviços existentes ...
-
-  # ========================================================================== #
-  #                                    FTP                                     #
-  # ========================================================================== #
 
   ftp:
     build:

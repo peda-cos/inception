@@ -76,24 +76,20 @@ Execute na raiz do seu projeto:
 ```bash
 #!/bin/bash
 
-# Criar diretório principal
 mkdir -p inception
 cd inception
 
-# Criar estrutura principal
 mkdir -p secrets
 mkdir -p srcs/requirements/mariadb/{conf,tools}
 mkdir -p srcs/requirements/nginx/{conf,tools}
 mkdir -p srcs/requirements/wordpress/{conf,tools}
 
-# Criar estrutura de bônus
 mkdir -p srcs/requirements/bonus/redis/{conf,tools}
 mkdir -p srcs/requirements/bonus/ftp/{conf,tools}
 mkdir -p srcs/requirements/bonus/adminer/{conf,tools}
 mkdir -p srcs/requirements/bonus/static-site/{conf,tools}
 mkdir -p srcs/requirements/bonus/portainer/{conf,tools}
 
-# Criar arquivos vazios
 touch Makefile
 touch README.md
 touch USER_DOC.md
@@ -106,7 +102,6 @@ touch secrets/ftp_password.txt
 touch srcs/docker-compose.yml
 touch srcs/.env
 
-# Criar Dockerfiles
 touch srcs/requirements/mariadb/Dockerfile
 touch srcs/requirements/mariadb/.dockerignore
 touch srcs/requirements/nginx/Dockerfile
@@ -134,11 +129,6 @@ O Makefile é **obrigatório** e deve estar na **raiz do projeto**.
 ### Makefile Completo
 
 ```makefile
-# ============================================================================ #
-#                                INCEPTION                                      #
-#                           42 Docker Infrastructure                            #
-# ============================================================================ #
-
 COMPOSE = docker compose -f srcs/docker-compose.yml
 DATA_PATH = /home/peda-cos/data
 
@@ -173,7 +163,6 @@ fclean: clean
 re: fclean all
 
 .PHONY: all bonus clean fclean re
-
 ```
 
 ### Como usar o Makefile
@@ -218,59 +207,34 @@ O arquivo `.env` armazena variáveis de ambiente. Fica em `srcs/.env`.
 ### srcs/.env
 
 ```env
-# ============================================================================ #
-#                           INCEPTION - VARIÁVEIS DE AMBIENTE                  #
-# ============================================================================ #
-
-# Domínio
 DOMAIN_NAME=peda-cos.42.fr
-
-# ============================================================================ #
-#                                    MARIADB                                   #
-# ============================================================================ #
 
 MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wpuser
 MYSQL_PASSWORD_FILE=/run/secrets/db_password
 
-# ============================================================================ #
-#                                   WORDPRESS                                  #
-# ============================================================================ #
-
 WORDPRESS_DB_HOST=mariadb:3306
 WORDPRESS_DB_NAME=wordpress
 WORDPRESS_DB_USER=wpuser
 WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
 
-# Usuário administrador WordPress (NÃO pode conter "admin"!)
+# Username must NOT contain "admin" (subject requirement)
 WORDPRESS_ADMIN_USER=supervisor
 WORDPRESS_ADMIN_EMAIL=peda-cos@student.42sp.org.br
 
-# Segundo usuário WordPress (editor)
 WORDPRESS_USER=editor
 WORDPRESS_USER_EMAIL=editor@peda-cos.42.fr
 WORDPRESS_USER_ROLE=editor
 
-# Título do site
 WORDPRESS_TITLE=Inception - peda-cos
-
-# ============================================================================ #
-#                                     NGINX                                    #
-# ============================================================================ #
 
 NGINX_HOST=peda-cos.42.fr
 NGINX_PORT=443
 
-# ============================================================================ #
-#                               BÔNUS (opcional)                               #
-# ============================================================================ #
-
-# Redis
 REDIS_HOST=redis
 REDIS_PORT=6379
 
-# FTP
 FTP_USER=ftpuser
 ```
 
@@ -305,7 +269,6 @@ SenhaDoBancoForte456!
 ### secrets/credentials.txt
 
 ```
-# Credenciais WordPress
 WORDPRESS_ADMIN_PASSWORD=SenhaDoAdmin789!
 WORDPRESS_USER_PASSWORD=SenhaDoEditor321!
 ```
@@ -319,7 +282,6 @@ SenhaFTPForte789!
 ### Permissões dos Arquivos de Secrets
 
 ```bash
-# Restringir acesso aos secrets
 chmod 600 secrets/*
 ```
 
@@ -344,10 +306,8 @@ secrets:
 ```bash
 #!/bin/sh
 
-# Ler senha do arquivo de secret
 DB_PASSWORD=$(cat /run/secrets/db_password)
 
-# Usar a senha
 mysql -u root -p"${DB_PASSWORD}" -e "SHOW DATABASES;"
 ```
 
@@ -360,53 +320,33 @@ Cada serviço deve ter seu `.dockerignore` para otimizar o build.
 ### srcs/requirements/mariadb/.dockerignore
 
 ```dockerignore
-# Git
 .git
 .gitignore
-
-# Documentação
 *.md
 README*
 LICENSE
-
-# Logs
 *.log
-
-# Arquivos temporários
 *.tmp
 *.swp
 *~
-
-# Backups
 *.bak
 *.backup
-
-# Dados locais
 data/
 ```
 
 ### srcs/requirements/nginx/.dockerignore
 
 ```dockerignore
-# Git
 .git
 .gitignore
-
-# Documentação
 *.md
 README*
 LICENSE
-
-# Logs
 *.log
 logs/
-
-# Arquivos temporários
 *.tmp
 *.swp
 *~
-
-# Certificados de desenvolvimento
 *.pem
 *.key
 *.crt
@@ -416,30 +356,17 @@ logs/
 ### srcs/requirements/wordpress/.dockerignore
 
 ```dockerignore
-# Git
 .git
 .gitignore
-
-# Documentação
 *.md
 README*
 LICENSE
-
-# Logs
 *.log
-
-# Arquivos temporários
 *.tmp
 *.swp
 *~
-
-# Node modules (se houver)
 node_modules/
-
-# Uploads locais
 wp-content/uploads/
-
-# Cache
 wp-content/cache/
 ```
 
@@ -452,27 +379,18 @@ Na raiz do projeto, crie um `.gitignore` para proteger dados sensíveis.
 ### .gitignore
 
 ```gitignore
-# ============================================================================ #
-#                              INCEPTION - GITIGNORE                           #
-# ============================================================================ #
-
-# NUNCA commitar secrets reais!
-# Descomente as linhas abaixo se quiser ignorar os secrets
+# NEVER commit real secrets!
 # secrets/db_password.txt
 # secrets/db_root_password.txt
 # secrets/credentials.txt
 
-# Dados persistentes
 /home/*/data/
 
-# Variáveis de ambiente com senhas reais
 # srcs/.env
 
-# Arquivos de sistema
 .DS_Store
 Thumbs.db
 
-# Arquivos de editor
 *.swp
 *.swo
 *~
@@ -480,25 +398,20 @@ Thumbs.db
 .vscode/
 *.sublime-*
 
-# Logs
 *.log
 logs/
 
-# Arquivos temporários
 *.tmp
 *.temp
 
-# Build artifacts
 *.tar
 *.gz
 
-# Certificados SSL (gerados localmente)
 *.pem
 *.key
 *.crt
 *.csr
 
-# Core dumps
 core
 ```
 

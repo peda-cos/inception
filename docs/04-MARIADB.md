@@ -50,46 +50,31 @@ srcs/requirements/mariadb/
 ### srcs/requirements/mariadb/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                           MARIADB DOCKERFILE                                 #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: MariaDB Server                                                     #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Atualizar e instalar MariaDB
 RUN apt-get update && apt-get install -y --no-install-recommends \
     mariadb-server \
     mariadb-client \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretório para o socket e arquivos do MySQL
 RUN mkdir -p /var/run/mysqld \
     && chown -R mysql:mysql /var/run/mysqld \
     && chmod 755 /var/run/mysqld
 
-# Criar diretório de dados
 RUN mkdir -p /var/lib/mysql \
     && chown -R mysql:mysql /var/lib/mysql
 
-# Copiar configuração customizada
 COPY conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
 
-# Copiar script de inicialização
 COPY tools/init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
-# Expor porta (documentação)
 EXPOSE 3306
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
     CMD mysqladmin ping -h localhost --silent || exit 1
 
-# Usar script de inicialização como entrypoint
 ENTRYPOINT ["/usr/local/bin/init.sh"]
 ```
 
@@ -97,7 +82,7 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 
 | Instrução                        | Propósito                           |
 | -------------------------------- | ----------------------------------- |
-| `FROM debian:bullseye`           | Base Debian penúltima estável       |
+| `FROM debian:oldstable`          | Base Debian penúltima estável       |
 | `apt-get install mariadb-server` | Instala o servidor MariaDB          |
 | `mkdir /var/run/mysqld`          | Cria diretório para socket          |
 | `chown mysql:mysql`              | Define permissões corretas          |
@@ -119,11 +104,6 @@ Este script é **crucial** para configurar o banco na primeira execução.
 #!/bin/bash
 set -e
 
-# ============================================================================ #
-#                       MARIADB INITIALIZATION SCRIPT                          #
-# ============================================================================ #
-
-# Função para ler secrets
 read_secret() {
     local secret_file="$1"
     if [ -f "$secret_file" ]; then
@@ -133,11 +113,9 @@ read_secret() {
     fi
 }
 
-# Ler senhas dos secrets
 MYSQL_ROOT_PASSWORD=$(read_secret "${MYSQL_ROOT_PASSWORD_FILE}")
 MYSQL_PASSWORD=$(read_secret "${MYSQL_PASSWORD_FILE}")
 
-# Validar variáveis obrigatórias
 if [ -z "$MYSQL_ROOT_PASSWORD" ]; then
     echo "[ERROR] MYSQL_ROOT_PASSWORD não definido"
     exit 1
@@ -158,21 +136,16 @@ if [ -z "$MYSQL_PASSWORD" ]; then
     exit 1
 fi
 
-# Verificar se é primeira inicialização
-if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "[INFO] Primeira inicialização detectada"
+init_database() {
     echo "[INFO] Inicializando banco de dados..."
 
-    # Inicializar diretório de dados do MariaDB
     mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null 2>&1
 
     echo "[INFO] Iniciando MariaDB temporariamente..."
 
-    # Iniciar MariaDB em modo seguro para configuração inicial
     mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
     pid="$!"
 
-    # Aguardar MariaDB iniciar
     echo "[INFO] Aguardando MariaDB iniciar..."
     for i in $(seq 1 30); do
         if mysqladmin ping --silent 2>/dev/null; then
@@ -188,50 +161,87 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 
     echo "[INFO] Configurando banco de dados..."
 
-    # Criar arquivo SQL temporário para configuração
     cat << EOF > /tmp/init.sql
--- Configurar senha do root
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 
--- Criar banco de dados
 CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Criar usuário para WordPress
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
 
--- Conceder privilégios
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
 
--- Permitir conexões do root de qualquer host (para debug)
--- CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
--- GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-
--- Aplicar alterações
 FLUSH PRIVILEGES;
 EOF
 
-    # Executar configuração
     mysql < /tmp/init.sql
 
-    # Limpar arquivo temporário
     rm -f /tmp/init.sql
 
     echo "[INFO] Banco de dados configurado com sucesso"
     echo "[INFO] - Database: ${MYSQL_DATABASE}"
     echo "[INFO] - User: ${MYSQL_USER}"
 
-    # Parar instância temporária
     mysqladmin shutdown
 
-    # Aguardar parada completa
     wait "$pid"
 
     echo "[INFO] Inicialização concluída"
+}
+
+setup_database_if_needed() {
+    echo "[INFO] Verificando se database ${MYSQL_DATABASE} existe..."
+
+    mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
+    pid="$!"
+
+    for i in $(seq 1 30); do
+        if mysqladmin ping --silent 2>/dev/null; then
+            break
+        fi
+        sleep 1
+    done
+
+    if ! mysqladmin ping --silent 2>/dev/null; then
+        echo "[ERROR] MariaDB não iniciou corretamente"
+        exit 1
+    fi
+
+    if ! mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "USE ${MYSQL_DATABASE}" 2>/dev/null; then
+        echo "[INFO] Database ${MYSQL_DATABASE} não existe, criando..."
+
+        cat << EOF > /tmp/setup.sql
+CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+
+GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+
+FLUSH PRIVILEGES;
+EOF
+
+        mysql -u root -p"${MYSQL_ROOT_PASSWORD}" < /tmp/setup.sql
+        rm -f /tmp/setup.sql
+
+        echo "[INFO] Database ${MYSQL_DATABASE} criada com sucesso"
+    else
+        echo "[INFO] Database ${MYSQL_DATABASE} já existe"
+    fi
+
+    mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
+    wait "$pid"
+}
+
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "[INFO] Primeira inicialização detectada"
+    init_database
+else
+    echo "[INFO] MariaDB já inicializado, verificando database..."
+    setup_database_if_needed
 fi
 
 echo "[INFO] Iniciando MariaDB..."
 
-# Usar exec para substituir o shell pelo processo mysqld (PID 1)
+# exec replaces shell with mysqld, making it PID 1 for proper signal handling
 exec mysqld --user=mysql --datadir=/var/lib/mysql
 ```
 
@@ -240,8 +250,9 @@ exec mysqld --user=mysql --datadir=/var/lib/mysql
 1. **Leitura de Secrets**: Usa arquivos em vez de variáveis de ambiente diretas
 2. **Validação**: Verifica se todas as variáveis necessárias estão definidas
 3. **Primeira Inicialização**: Detecta se é a primeira vez e configura o banco
-4. **Configuração Segura**: Usa arquivo SQL temporário que é deletado após uso
-5. **`exec` no final**: Substitui o shell pelo mysqld para gerenciamento correto de PID 1
+4. **Verificação de Database**: Mesmo com dados existentes, verifica se a database do WordPress existe
+5. **Configuração Segura**: Usa arquivo SQL temporário que é deletado após uso
+6. **`exec` no final**: Substitui o shell pelo mysqld para gerenciamento correto de PID 1
 
 ---
 
@@ -250,47 +261,30 @@ exec mysqld --user=mysql --datadir=/var/lib/mysql
 ### srcs/requirements/mariadb/conf/50-server.cnf
 
 ```ini
-# ============================================================================ #
-#                         MARIADB SERVER CONFIGURATION                         #
-# ============================================================================ #
-
 [mysqld]
-# Diretório de dados
 datadir                 = /var/lib/mysql
-
-# Socket
 socket                  = /var/run/mysqld/mysqld.sock
-
-# Aceitar conexões de qualquer IP (dentro da rede Docker)
 bind-address            = 0.0.0.0
-
-# Porta padrão
 port                    = 3306
-
-# Usuário
 user                    = mysql
-
-# Charset UTF-8
 character-set-server    = utf8mb4
 collation-server        = utf8mb4_unicode_ci
 
-# Performance
+# Improves performance by avoiding DNS lookups
 skip-name-resolve
 max_connections         = 100
 connect_timeout         = 10
 wait_timeout            = 600
 max_allowed_packet      = 64M
 
-# InnoDB
 innodb_buffer_pool_size = 128M
 innodb_log_file_size    = 48M
 innodb_file_per_table   = 1
 
-# Logs
 log_error               = /var/lib/mysql/error.log
 slow_query_log          = 0
 
-# Desabilitar query cache (deprecated)
+# Query cache is deprecated in modern MariaDB/MySQL
 query_cache_type        = 0
 query_cache_size        = 0
 

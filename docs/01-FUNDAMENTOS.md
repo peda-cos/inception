@@ -164,22 +164,16 @@ Esta é uma das comparações **obrigatórias** do README conforme o subject.
 Um Dockerfile é um arquivo de texto com instruções para construir uma imagem Docker.
 
 ```dockerfile
-# Comentário: Define a imagem base
-FROM debian:bullseye
+FROM debian:oldstable
 
-# Define o diretório de trabalho
 WORKDIR /app
 
-# Copia arquivos para a imagem
 COPY ./src /app
 
-# Executa comandos durante o build
 RUN apt-get update && apt-get install -y nginx
 
-# Expõe uma porta (documentação)
 EXPOSE 80
 
-# Comando padrão ao iniciar o container
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
@@ -187,7 +181,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 | Instrução    | Descrição                    | Exemplo                     |
 | ------------ | ---------------------------- | --------------------------- |
-| `FROM`       | Imagem base                  | `FROM debian:bullseye`      |
+| `FROM`       | Imagem base                  | `FROM debian:oldstable`     |
 | `WORKDIR`    | Define diretório de trabalho | `WORKDIR /var/www`          |
 | `COPY`       | Copia arquivos do host       | `COPY ./conf /etc/nginx`    |
 | `ADD`        | Copia + extrai arquivos      | `ADD app.tar.gz /app`       |
@@ -215,7 +209,7 @@ Imagens são templates read-only compostos por camadas (layers).
 ├─────────────────────────────────────┤
 │      RUN apt-get install nginx      │  ← Layer 2
 ├─────────────────────────────────────┤
-│      FROM debian:bullseye           │  ← Layer 1 (base)
+│      FROM debian:oldstable           │  ← Layer 1 (base)
 └─────────────────────────────────────┘
 ```
 

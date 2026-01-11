@@ -51,65 +51,48 @@ srcs/requirements/wordpress/
 ### srcs/requirements/wordpress/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                         WORDPRESS + PHP-FPM DOCKERFILE                       #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: WordPress com PHP-FPM                                              #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Instalar PHP-FPM e extensões necessárias para WordPress
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    php7.4-fpm \
-    php7.4-mysql \
-    php7.4-curl \
-    php7.4-gd \
-    php7.4-intl \
-    php7.4-mbstring \
-    php7.4-xml \
-    php7.4-zip \
-    php7.4-bcmath \
-    php7.4-imagick \
-    php7.4-redis \
+    php8.2-fpm \
+    php8.2-mysql \
+    php8.2-curl \
+    php8.2-gd \
+    php8.2-intl \
+    php8.2-mbstring \
+    php8.2-xml \
+    php8.2-zip \
+    php8.2-bcmath \
+    php8.2-imagick \
+    php8.2-redis \
     curl \
     mariadb-client \
     ca-certificates \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Criar diretório para o WordPress
 RUN mkdir -p /var/www/html \
     && chown -R www-data:www-data /var/www/html
 
-# Criar diretório para o socket PHP-FPM
 RUN mkdir -p /run/php \
     && chown -R www-data:www-data /run/php
 
-# Copiar configuração PHP-FPM
-COPY conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
+COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
-# Copiar script de inicialização
 COPY tools/init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
-# Diretório de trabalho
 WORKDIR /var/www/html
 
-# Expor porta do PHP-FPM
 EXPOSE 9000
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=5 \
     CMD pgrep php-fpm > /dev/null || exit 1
 
-# Usar script de inicialização como entrypoint
 ENTRYPOINT ["/usr/local/bin/init.sh"]
 ```
 
@@ -117,10 +100,10 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 
 | Instrução              | Propósito                                |
 | ---------------------- | ---------------------------------------- |
-| `php7.4-fpm`           | FastCGI Process Manager para PHP         |
-| `php7.4-mysql`         | Extensão para conexão com MySQL/MariaDB  |
-| `php7.4-gd`, `imagick` | Manipulação de imagens                   |
-| `php7.4-redis`         | Suporte a Redis (para bônus)             |
+| `php8.2-fpm`           | FastCGI Process Manager para PHP         |
+| `php8.2-mysql`         | Extensão para conexão com MySQL/MariaDB  |
+| `php8.2-gd`, `imagick` | Manipulação de imagens                   |
+| `php8.2-redis`         | Suporte a Redis (para bônus)             |
 | `procps`               | Para comandos ps/pgrep (verificar PID 1) |
 | `wp-cli.phar`          | Ferramenta CLI para gerenciar WordPress  |
 | `EXPOSE 9000`          | Porta padrão do PHP-FPM                  |
@@ -137,11 +120,6 @@ Este script configura o WordPress na primeira execução.
 #!/bin/bash
 set -e
 
-# ============================================================================ #
-#                      WORDPRESS INITIALIZATION SCRIPT                         #
-# ============================================================================ #
-
-# Função para ler secrets
 read_secret() {
     local secret_file="$1"
     if [ -f "$secret_file" ]; then
@@ -151,23 +129,19 @@ read_secret() {
     fi
 }
 
-# Função para ler credenciais do arquivo
 read_credentials() {
     local cred_file="/run/secrets/credentials"
     if [ -f "$cred_file" ]; then
-        # Extrair valor da variável do arquivo
         grep "^$1=" "$cred_file" | cut -d'=' -f2 | tr -d '\n'
     else
         echo ""
     fi
 }
 
-# Ler senhas dos secrets
 DB_PASSWORD=$(read_secret "${WORDPRESS_DB_PASSWORD_FILE}")
 ADMIN_PASSWORD=$(read_credentials "WORDPRESS_ADMIN_PASSWORD")
 USER_PASSWORD=$(read_credentials "WORDPRESS_USER_PASSWORD")
 
-# Usar senhas padrão se não definidas (apenas para desenvolvimento)
 if [ -z "$ADMIN_PASSWORD" ]; then
     ADMIN_PASSWORD="ChangeMe123!"
 fi
@@ -176,7 +150,6 @@ if [ -z "$USER_PASSWORD" ]; then
     USER_PASSWORD="ChangeMe456!"
 fi
 
-# Validar variáveis obrigatórias
 if [ -z "$WORDPRESS_DB_HOST" ]; then
     echo "[ERROR] WORDPRESS_DB_HOST não definido"
     exit 1
@@ -202,18 +175,16 @@ if [ -z "$DOMAIN_NAME" ]; then
     exit 1
 fi
 
-# Validar que o admin não contém "admin"
+# Subject requirement: admin username must not contain "admin"
 if echo "$WORDPRESS_ADMIN_USER" | grep -iq "admin"; then
     echo "[ERROR] Nome do administrador não pode conter 'admin'"
     exit 1
 fi
 
-# Extrair host e porta
 DB_HOST=$(echo "$WORDPRESS_DB_HOST" | cut -d':' -f1)
 DB_PORT=$(echo "$WORDPRESS_DB_HOST" | cut -d':' -f2)
 DB_PORT=${DB_PORT:-3306}
 
-# Aguardar MariaDB estar pronto
 echo "[INFO] Aguardando MariaDB em $DB_HOST:$DB_PORT..."
 max_attempts=60
 attempt=0
@@ -228,14 +199,11 @@ while ! mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" --silent 2>/dev/null; do
 done
 echo "[INFO] MariaDB está pronto!"
 
-# Configurar WordPress
 cd /var/www/html
 
-# Verificar se WordPress já está instalado
 if [ ! -f "/var/www/html/wp-config.php" ]; then
     echo "[INFO] Primeira inicialização - Configurando WordPress..."
 
-    # Verificar se arquivos do WordPress existem
     if [ ! -f "/var/www/html/wp-load.php" ]; then
         echo "[INFO] Baixando WordPress..."
         wp core download --allow-root --locale=pt_BR
@@ -251,13 +219,11 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
         --dbcollate="utf8mb4_unicode_ci" \
         --allow-root
 
-    # Adicionar configurações extras ao wp-config.php
     wp config set WP_DEBUG false --raw --allow-root
     wp config set WP_DEBUG_LOG false --raw --allow-root
     wp config set WP_DEBUG_DISPLAY false --raw --allow-root
     wp config set DISALLOW_FILE_EDIT true --raw --allow-root
 
-    # Configuração para Redis (bônus)
     if [ -n "$REDIS_HOST" ]; then
         wp config set WP_REDIS_HOST "$REDIS_HOST" --allow-root
         wp config set WP_REDIS_PORT "${REDIS_PORT:-6379}" --allow-root
@@ -282,14 +248,11 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
         --user_pass="$USER_PASSWORD" \
         --allow-root || echo "[WARN] Usuário já existe"
 
-    # Configurar permalinks
     wp rewrite structure '/%postname%/' --allow-root
     wp rewrite flush --allow-root
 
-    # Instalar tema padrão (opcional)
     wp theme activate twentytwentythree --allow-root 2>/dev/null || true
 
-    # Atualizar traduções
     wp language core update --allow-root 2>/dev/null || true
 
     echo "[INFO] WordPress instalado com sucesso!"
@@ -300,13 +263,12 @@ else
     echo "[INFO] WordPress já configurado"
 fi
 
-# Ajustar permissões
 chown -R www-data:www-data /var/www/html
 
 echo "[INFO] Iniciando PHP-FPM..."
 
-# Usar exec para substituir o shell pelo PHP-FPM (PID 1)
-exec php-fpm7.4 -F
+# -F keeps PHP-FPM in foreground; exec makes it PID 1 for proper signal handling
+exec php-fpm8.2 -F
 ```
 
 ### Pontos Importantes
@@ -315,7 +277,7 @@ exec php-fpm7.4 -F
 2. **Aguarda MariaDB**: Usa loop para esperar o banco estar disponível
 3. **WP-CLI**: Usa a ferramenta oficial para instalação automática
 4. **Dois Usuários**: Cria o admin e um segundo usuário (editor)
-5. **`exec php-fpm7.4 -F`**: O `-F` mantém o PHP-FPM em foreground
+5. **`exec php-fpm8.2 -F`**: O `-F` mantém o PHP-FPM em foreground
 
 ---
 
@@ -324,24 +286,16 @@ exec php-fpm7.4 -F
 ### srcs/requirements/wordpress/conf/www.conf
 
 ```ini
-; ============================================================================ ;
-;                         PHP-FPM POOL CONFIGURATION                           ;
-; ============================================================================ ;
-
 [www]
-; Usuário e grupo
 user = www-data
 group = www-data
 
-; Escutar em todas as interfaces na porta 9000
 listen = 0.0.0.0:9000
 
-; Permissões do socket (não usado, pois estamos usando TCP)
 listen.owner = www-data
 listen.group = www-data
 listen.mode = 0660
 
-; Gerenciamento de processos
 pm = dynamic
 pm.max_children = 50
 pm.start_servers = 5
@@ -349,15 +303,12 @@ pm.min_spare_servers = 5
 pm.max_spare_servers = 35
 pm.max_requests = 500
 
-; Timeout
 request_terminate_timeout = 300
 
-; Logs
 catch_workers_output = yes
 php_admin_flag[log_errors] = on
 php_admin_value[error_log] = /var/log/php-fpm-error.log
 
-; Performance
 php_admin_value[memory_limit] = 256M
 php_admin_value[upload_max_filesize] = 64M
 php_admin_value[post_max_size] = 64M
@@ -365,26 +316,22 @@ php_admin_value[max_execution_time] = 300
 php_admin_value[max_input_time] = 300
 php_admin_value[max_input_vars] = 5000
 
-; Segurança
 php_admin_value[expose_php] = Off
 php_admin_value[allow_url_fopen] = On
 php_admin_value[allow_url_include] = Off
 
-; Timezone
 php_admin_value[date.timezone] = America/Sao_Paulo
 
-; Session
 php_admin_value[session.save_handler] = files
 php_admin_value[session.save_path] = /tmp
 
-; Opcache
 php_admin_flag[opcache.enable] = 1
 php_admin_value[opcache.memory_consumption] = 128
 php_admin_value[opcache.interned_strings_buffer] = 8
 php_admin_value[opcache.max_accelerated_files] = 10000
 php_admin_value[opcache.revalidate_freq] = 2
 
-; Clear environment
+; Required to preserve environment variables passed from Docker
 clear_env = no
 ```
 
@@ -604,7 +551,7 @@ sudo chown -R 33:33 /home/peda-cos/data/wordpress/
 docker compose exec wordpress pgrep php-fpm
 
 # Verificar configuração
-docker compose exec wordpress php-fpm7.4 -t
+docker compose exec wordpress php-fpm8.2 -t
 
 # Ver logs de erro
 docker compose exec wordpress cat /var/log/php-fpm-error.log

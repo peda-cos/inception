@@ -58,43 +58,28 @@ srcs/requirements/bonus/redis/
 ### srcs/requirements/bonus/redis/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                             REDIS DOCKERFILE                                 #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: Redis Server (cache)                                               #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Instalar Redis e utilitários
-# procps: necessário para verificação de PID 1 (ps)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     redis-server \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretórios necessários
 RUN mkdir -p /var/run/redis \
     && mkdir -p /var/lib/redis \
     && chown -R redis:redis /var/run/redis \
     && chown -R redis:redis /var/lib/redis
 
-# Copiar configuração
 COPY conf/redis.conf /etc/redis/redis.conf
 
-# Copiar script de inicialização
 COPY tools/init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
-# Expor porta Redis
 EXPOSE 6379
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
     CMD redis-cli ping | grep -q PONG || exit 1
 
-# Iniciar Redis
 ENTRYPOINT ["/usr/local/bin/init.sh"]
 ```
 
@@ -105,56 +90,36 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 ### srcs/requirements/bonus/redis/conf/redis.conf
 
 ```conf
-# ============================================================================ #
-#                         REDIS CONFIGURATION                                  #
-# ============================================================================ #
-
-# Aceitar conexões de qualquer IP (dentro da rede Docker)
 bind 0.0.0.0
-
-# Porta padrão
 port 6379
 
-# Modo protegido desativado (dentro de rede isolada)
+# Disabled because we're inside an isolated Docker network
 protected-mode no
 
-# Timeout de conexão
 timeout 0
-
-# TCP keepalive
 tcp-keepalive 300
 
-# Não rodar como daemon (Docker precisa do processo em foreground)
+# Docker requires foreground process
 daemonize no
 
-# Nível de log
 loglevel notice
 
-# Log para stdout (Docker logs)
+# Empty string = log to stdout for Docker logs
 logfile ""
 
-# Número de bancos de dados
 databases 16
 
-# Persistência - desativada para cache puro
-# Descomente se quiser persistir dados
+# Persistence disabled for pure cache; uncomment to enable
 # save 900 1
 # save 300 10
 # save 60 10000
 
-# Diretório de dados
 dir /var/lib/redis
 
-# Limite de memória (ajuste conforme necessário)
 maxmemory 128mb
-
-# Política de remoção quando memória cheia
 maxmemory-policy allkeys-lru
 
-# Desativar persistência RDB (para cache)
 save ""
-
-# Desativar AOF (para cache)
 appendonly no
 ```
 
@@ -164,17 +129,11 @@ appendonly no
 #!/bin/sh
 set -e
 
-# ============================================================================ #
-#                        REDIS INITIALIZATION SCRIPT                           #
-# ============================================================================ #
-
 echo "[INFO] Iniciando Redis..."
 
-# Ajustar permissões
 chown -R redis:redis /var/lib/redis
 chown -R redis:redis /var/run/redis
 
-# Usar exec para substituir shell pelo Redis
 exec redis-server /etc/redis/redis.conf
 ```
 
@@ -227,10 +186,6 @@ fi
 ```yaml
 services:
   # ... serviços existentes ...
-
-  # ========================================================================== #
-  #                                   REDIS                                    #
-  # ========================================================================== #
 
   redis:
     build:

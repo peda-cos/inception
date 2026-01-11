@@ -42,61 +42,41 @@ srcs/requirements/bonus/adminer/
 ### srcs/requirements/bonus/adminer/Dockerfile
 
 ```dockerfile
-# ============================================================================ #
-#                            ADMINER DOCKERFILE                                #
-#                                                                              #
-#  Base: Debian Bullseye (penúltima versão estável)                           #
-#  Serviço: Adminer (gerenciador de banco de dados)                            #
-# ============================================================================ #
+FROM debian:oldstable
 
-FROM debian:bullseye
-
-# Instalar PHP e dependências
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    php7.4-fpm \
-    php7.4-mysql \
-    php7.4-mbstring \
-    php7.4-json \
+    php8.2-fpm \
+    php8.2-mysql \
+    php8.2-mbstring \
     curl \
+    ca-certificates \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretórios
 RUN mkdir -p /var/www/html \
     && mkdir -p /run/php
 
-# Baixar Adminer
 RUN curl -L https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php \
     -o /var/www/html/index.php
 
-# Baixar design (opcional)
 RUN curl -L https://raw.githubusercontent.com/vrana/adminer/master/designs/nette/adminer.css \
     -o /var/www/html/adminer.css
 
-# Copiar configuração PHP-FPM
-COPY conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
+COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
-# Ajustar permissões
 RUN chown -R www-data:www-data /var/www/html
 
-# Expor porta
 EXPOSE 8080
 
-# Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
     CMD pgrep php-fpm > /dev/null || exit 1
 
-# Iniciar PHP-FPM
-CMD ["php-fpm7.4", "-F"]
+CMD ["php-fpm8.2", "-F"]
 ```
 
 ### srcs/requirements/bonus/adminer/conf/www.conf
 
 ```ini
-; ============================================================================ ;
-;                      PHP-FPM POOL CONFIGURATION - ADMINER                    ;
-; ============================================================================ ;
-
 [www]
 user = www-data
 group = www-data
@@ -111,6 +91,7 @@ pm.start_servers = 2
 pm.min_spare_servers = 1
 pm.max_spare_servers = 5
 
+; Required to preserve environment variables passed from Docker
 clear_env = no
 
 php_admin_value[memory_limit] = 128M
@@ -127,10 +108,6 @@ php_admin_value[post_max_size] = 64M
 ```yaml
 services:
   # ... serviços existentes ...
-
-  # ========================================================================== #
-  #                                 ADMINER                                    #
-  # ========================================================================== #
 
   adminer:
     build:

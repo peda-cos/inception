@@ -161,7 +161,7 @@ ls -la /home/peda-cos/data/mariadb/
 ```bash
 # Verificar que nao usa imagens prontas
 grep -r "FROM" srcs/requirements/*/Dockerfile
-# Esperado: apenas "FROM debian:bullseye" ou "FROM alpine:X.X"
+# Esperado: apenas "FROM debian:oldstable" ou "FROM alpine:X.X"
 
 # Verificar que nao usa latest
 grep -r ":latest" srcs/requirements/*/Dockerfile
@@ -317,10 +317,10 @@ else
 fi
 
 BASES=$(grep -h "^FROM" srcs/requirements/*/Dockerfile | sort -u)
-if echo "$BASES" | grep -qvE "debian:bullseye|alpine:"; then
+if echo "$BASES" | grep -qvE "debian:oldstable|alpine:"; then
     fail "Base invalida encontrada: $BASES"
 else
-    pass "Bases corretas (Debian Bullseye ou Alpine)"
+    pass "Bases corretas (Debian oldstable ou Alpine)"
 fi
 
 # ----------------------------------------------------------------------------
@@ -337,10 +337,10 @@ else
 fi
 
 WP_PID1=$(docker exec wordpress ps -o comm= -p 1 2>/dev/null || echo "error")
-if [ "$WP_PID1" = "php-fpm7.4" ] || [ "$WP_PID1" = "php-fpm" ]; then
+if [ "$WP_PID1" = "php-fpm8.2" ] || [ "$WP_PID1" = "php-fpm" ]; then
     pass "WordPress: PID 1 e php-fpm"
 else
-    fail "WordPress: PID 1 e '$WP_PID1' (esperado: php-fpm7.4)"
+    fail "WordPress: PID 1 e '$WP_PID1' (esperado: php-fpm8.2)"
 fi
 
 DB_PID1=$(docker exec mariadb ps -o comm= -p 1 2>/dev/null || echo "error")
@@ -674,8 +674,8 @@ docker exec nginx cat /etc/nginx/nginx.conf
 docker exec nginx nginx -t
 
 # PHP-FPM
-docker exec wordpress cat /etc/php/7.4/fpm/php-fpm.conf
-docker exec wordpress cat /etc/php/7.4/fpm/pool.d/www.conf
+docker exec wordpress cat /etc/php/8.2/fpm/php-fpm.conf
+docker exec wordpress cat /etc/php/8.2/fpm/pool.d/www.conf
 
 # MariaDB
 docker exec mariadb cat /etc/mysql/mariadb.conf.d/50-server.cnf

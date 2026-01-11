@@ -60,24 +60,9 @@ O Docker Compose orquestra todos os serviços do Inception:
 ### srcs/docker-compose.yml
 
 ```yaml
-# ============================================================================ #
-#                        INCEPTION - DOCKER COMPOSE                            #
-#                                                                              #
-#  Autor: peda-cos                                                             #
-#  42sp - São Paulo                                                            #
-# ============================================================================ #
-
 version: "3.8"
 
-# ============================================================================ #
-#                                  SERVIÇOS                                    #
-# ============================================================================ #
-
 services:
-  # ========================================================================== #
-  #                                  MARIADB                                   #
-  # ========================================================================== #
-
   mariadb:
     build:
       context: ./requirements/mariadb
@@ -104,10 +89,6 @@ services:
       retries: 5
       start_period: 30s
 
-  # ========================================================================== #
-  #                               WORDPRESS                                    #
-  # ========================================================================== #
-
   wordpress:
     build:
       context: ./requirements/wordpress
@@ -131,7 +112,6 @@ services:
       - WORDPRESS_USER=${WORDPRESS_USER}
       - WORDPRESS_USER_EMAIL=${WORDPRESS_USER_EMAIL}
       - WORDPRESS_USER_ROLE=${WORDPRESS_USER_ROLE}
-      # Redis cache (bonus)
       - REDIS_HOST=${REDIS_HOST:-}
       - REDIS_PORT=${REDIS_PORT:-}
     secrets:
@@ -146,10 +126,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
-
-  # ========================================================================== #
-  #                                  NGINX                                     #
-  # ========================================================================== #
 
   nginx:
     build:
@@ -176,21 +152,12 @@ services:
       retries: 3
       start_period: 10s
 
-# ============================================================================ #
-#                                   REDES                                      #
-# ============================================================================ #
-
 networks:
   inception:
     name: inception
     driver: bridge
 
-# ============================================================================ #
-#                                  VOLUMES                                     #
-# ============================================================================ #
-
 volumes:
-  # Volume para dados do WordPress
   wordpress_data:
     name: wordpress_data
     driver: local
@@ -199,7 +166,6 @@ volumes:
       o: bind
       device: /home/peda-cos/data/wordpress
 
-  # Volume para dados do MariaDB
   db_data:
     name: db_data
     driver: local
@@ -207,10 +173,6 @@ volumes:
       type: none
       o: bind
       device: /home/peda-cos/data/mariadb
-
-# ============================================================================ #
-#                                  SECRETS                                     #
-# ============================================================================ #
 
 secrets:
   db_password:
@@ -430,16 +392,11 @@ Crie um script para validar toda a instalação:
 ```bash
 #!/bin/bash
 
-# ============================================================================ #
-#                         INCEPTION VALIDATION SCRIPT                          #
-# ============================================================================ #
-
 echo "=========================================="
 echo "   INCEPTION - VALIDAÇÃO COMPLETA"
 echo "=========================================="
 echo ""
 
-# Cores
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
@@ -447,7 +404,6 @@ NC='\033[0m'
 
 ERRORS=0
 
-# Função de teste
 check() {
     if [ $1 -eq 0 ]; then
         echo -e "${GREEN}[PASS]${NC} $2"
@@ -457,35 +413,28 @@ check() {
     fi
 }
 
-# 1. Verificar containers rodando
 echo -e "\n${YELLOW}1. Containers${NC}"
 docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "mariadb|wordpress|nginx"
 check $(docker ps | grep -c "healthy") "Todos os containers saudáveis (3 esperados)"
 
-# 2. Verificar porta 443
 echo -e "\n${YELLOW}2. Porta 443${NC}"
 curl -sk https://peda-cos.42.fr/health > /dev/null 2>&1
 check $? "HTTPS acessível na porta 443"
 
-# 3. Verificar TLSv1.2
 echo -e "\n${YELLOW}3. TLS${NC}"
 openssl s_client -connect peda-cos.42.fr:443 -tls1_2 < /dev/null 2>&1 | grep -q "Protocol.*TLSv1.2"
 check $? "TLSv1.2 suportado"
 
-# 4. Verificar TLSv1.3
 openssl s_client -connect peda-cos.42.fr:443 -tls1_3 < /dev/null 2>&1 | grep -q "Protocol.*TLSv1.3"
 check $? "TLSv1.3 suportado"
 
-# 5. Verificar que TLSv1.1 é rejeitado
 openssl s_client -connect peda-cos.42.fr:443 -tls1_1 < /dev/null 2>&1 | grep -q "handshake failure\|no protocols available"
 check $? "TLSv1.1 rejeitado"
 
-# 6. Verificar WordPress
 echo -e "\n${YELLOW}4. WordPress${NC}"
 curl -sk https://peda-cos.42.fr/ | grep -q "WordPress\|wp-content"
 check $? "WordPress respondendo"
 
-# 7. Verificar volumes
 echo -e "\n${YELLOW}5. Volumes${NC}"
 ls /home/peda-cos/data/wordpress/wp-config.php > /dev/null 2>&1
 check $? "Volume WordPress persistido"
@@ -493,12 +442,10 @@ check $? "Volume WordPress persistido"
 ls /home/peda-cos/data/mariadb/ibdata1 > /dev/null 2>&1
 check $? "Volume MariaDB persistido"
 
-# 8. Verificar rede
 echo -e "\n${YELLOW}6. Rede${NC}"
 docker network ls | grep -q "inception"
 check $? "Rede 'inception' existe"
 
-# 9. Verificar que apenas porta 443 está exposta
 echo -e "\n${YELLOW}7. Portas expostas${NC}"
 EXPOSED=$(docker ps --format "{{.Ports}}" | grep -oE "[0-9]+:[0-9]+" | cut -d: -f1 | sort -u | tr '\n' ' ')
 if [ "$EXPOSED" = "443 " ] || [ "$EXPOSED" = "443" ]; then
@@ -507,7 +454,6 @@ else
     check 1 "Apenas porta 443 exposta (encontradas: $EXPOSED)"
 fi
 
-# 10. Verificar usuários WordPress
 echo -e "\n${YELLOW}8. Usuários WordPress${NC}"
 ADMIN_USER=$(docker exec wordpress wp user list --role=administrator --field=user_login --allow-root 2>/dev/null | head -1)
 if echo "$ADMIN_USER" | grep -iqE "admin|administrator"; then
@@ -523,7 +469,6 @@ else
     check 1 "Pelo menos 2 usuários criados"
 fi
 
-# 11. Verificar restart policy
 echo -e "\n${YELLOW}9. Restart Policy${NC}"
 for container in nginx wordpress mariadb; do
     RESTART=$(docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' $container 2>/dev/null)
@@ -534,7 +479,6 @@ for container in nginx wordpress mariadb; do
     fi
 done
 
-# Resumo
 echo ""
 echo "=========================================="
 if [ $ERRORS -eq 0 ]; then
