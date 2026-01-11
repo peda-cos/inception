@@ -1,83 +1,83 @@
-# 13. Validacao e Troubleshooting
+# 13. Validação e Troubleshooting
 
-[Voltar ao Indice](00-INDICE.md) | [Anterior: Portainer](12-BONUS-PORTAINER.md) | [Proximo: Referencias](14-REFERENCIAS.md)
+[Voltar ao Índice](00-INDICE.md) | [Anterior: Portainer](12-BONUS-PORTAINER.md) | [Próximo: Referências](14-REFERENCIAS.md)
 
 ---
 
-## Indice
+## Índice
 
-1. [Checklist de Avaliacao](#1-checklist-de-avaliacao)
-2. [Comandos de Validacao](#2-comandos-de-validacao)
+1. [Checklist de Avaliação](#1-checklist-de-avaliacao)
+2. [Comandos de Validação](#2-comandos-de-validacao)
 3. [Testes Automatizados](#3-testes-automatizados)
 4. [Problemas Comuns](#4-problemas-comuns)
 5. [Debugging Containers](#5-debugging-containers)
 6. [Logs e Monitoramento](#6-logs-e-monitoramento)
-7. [Perguntas da Avaliacao](#7-perguntas-da-avaliacao)
+7. [Perguntas da Avaliação](#7-perguntas-da-avaliacao)
 
 ---
 
-## 1. Checklist de Avaliacao
+## 1. Checklist de Avaliação
 
 ### Requisitos Gerais
 
 - [ ] Projeto executado em Virtual Machine
-- [ ] `Makefile` na raiz configura toda a aplicacao via `docker-compose.yml`
-- [ ] Arquivos de configuracao em `srcs/`
+- [ ] `Makefile` na raiz configura toda a aplicação via `docker-compose.yml`
+- [ ] Arquivos de configuração em `srcs/`
 - [ ] Arquivo `.env` presente em `srcs/`
-- [ ] Dominio `peda-cos.42.fr` aponta para IP local
+- [ ] Domínio `peda-cos.42.fr` aponta para IP local
 - [ ] Sem senhas hardcoded nos Dockerfiles
-- [ ] Variaveis de ambiente usadas corretamente
+- [ ] Variáveis de ambiente usadas corretamente
 
 ### Dockerfiles
 
-- [ ] Um Dockerfile por servico
+- [ ] Um Dockerfile por serviço
 - [ ] Dockerfiles chamados pelo `docker-compose.yml`
 - [ ] Base: Alpine ou Debian penultimate stable (Bullseye)
-- [ ] **NAO** usa tag `latest`
-- [ ] **NAO** usa imagens prontas (exceto Alpine/Debian base)
-- [ ] Construidos do zero (sem `nginx:latest`, `wordpress:latest`, etc.)
+- [ ] **NÃO** usa tag `latest`
+- [ ] **NÃO** usa imagens prontas (exceto Alpine/Debian base)
+- [ ] Construídos do zero (sem `nginx:latest`, `wordpress:latest`, etc.)
 
-### Containers Obrigatorios
+### Containers Obrigatórios
 
 | Container     | Requisitos                                                   |
 | ------------- | ------------------------------------------------------------ |
-| **NGINX**     | TLSv1.2 ou TLSv1.3 APENAS, unico ponto de entrada, porta 443 |
+| **NGINX**     | TLSv1.2 ou TLSv1.3 APENAS, único ponto de entrada, porta 443 |
 | **WordPress** | php-fpm instalado e configurado, sem nginx                   |
 | **MariaDB**   | Sem nginx, volume para dados                                 |
 
 ### Network e Volumes
 
-- [ ] Docker network customizada (nao usa `network: host`)
-- [ ] **NAO** usa `--link` (deprecated)
+- [ ] Docker network customizada (não usa `network: host`)
+- [ ] **NÃO** usa `--link` (deprecated)
 - [ ] Volumes para WordPress database
 - [ ] Volumes para WordPress files
 - [ ] Volumes em `/home/peda-cos/data/`
 
-### Seguranca e Boas Praticas
+### Segurança e Boas Práticas
 
 - [ ] Containers reiniciam em caso de crash (`restart: unless-stopped`)
-- [ ] **NAO** usa comandos hacky (`tail -f`, `sleep infinity`, `while true`, `bash`)
-- [ ] PID 1 e o daemon correto (nginx, php-fpm, mysqld)
+- [ ] **NÃO** usa comandos hacky (`tail -f`, `sleep infinity`, `while true`, `bash`)
+- [ ] PID 1 é o daemon correto (nginx, php-fpm, mysqld)
 - [ ] Sem loops infinitos em entrypoints
 
 ### WordPress
 
-- [ ] 2 usuarios criados
-- [ ] 1 usuario e administrador
-- [ ] Nome do admin **NAO** contem "admin", "Admin", "administrator", etc.
-- [ ] Segundo usuario nao e administrador
+- [ ] 2 usuários criados
+- [ ] 1 usuário é administrador
+- [ ] Nome do admin **NÃO** contém "admin", "Admin", "administrator", etc.
+- [ ] Segundo usuário não é administrador
 
-### Bonus (se aplicavel)
+### Bonus (se aplicável)
 
 - [ ] Redis cache funcionando com WordPress
 - [ ] Servidor FTP apontando para volume WordPress
 - [ ] Adminer funcionando
-- [ ] Site estatico sem PHP
-- [ ] Servico extra util (Portainer)
+- [ ] Site estático sem PHP
+- [ ] Serviço extra útil (Portainer)
 
 ---
 
-## 2. Comandos de Validacao
+## 2. Comandos de Validação
 
 ### Verificar Containers
 
@@ -85,7 +85,7 @@
 # Listar containers rodando
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-# Saida esperada:
+# Saída esperada:
 # NAMES       STATUS          PORTS
 # nginx       Up 2 minutes    0.0.0.0:443->443/tcp
 # wordpress   Up 2 minutes    9000/tcp
@@ -105,10 +105,10 @@ openssl s_client -connect peda-cos.42.fr:443 -tls1_2 2>/dev/null | grep -E "Prot
 openssl s_client -connect peda-cos.42.fr:443 -tls1_3 2>/dev/null | grep -E "Protocol|Cipher"
 # Esperado: Protocol  : TLSv1.3
 
-# Verificar que TLSv1.0 e TLSv1.1 NAO funcionam
+# Verificar que TLSv1.0 e TLSv1.1 NÃO funcionam
 openssl s_client -connect peda-cos.42.fr:443 -tls1 2>&1 | grep -i "error\|fail"
 openssl s_client -connect peda-cos.42.fr:443 -tls1_1 2>&1 | grep -i "error\|fail"
-# Esperado: Erros de conexao
+# Esperado: Erros de conexão
 ```
 
 ### Verificar Portas Expostas
@@ -118,7 +118,7 @@ openssl s_client -connect peda-cos.42.fr:443 -tls1_1 2>&1 | grep -i "error\|fail
 docker ps --format "{{.Names}}: {{.Ports}}"
 
 # APENAS porta 443 deve estar mapeada para 0.0.0.0
-# Outras portas sao internas (ex: 9000/tcp sem mapeamento)
+# Outras portas são internas (ex: 9000/tcp sem mapeamento)
 
 # Verificar com netstat
 sudo netstat -tlnp | grep docker
@@ -134,7 +134,7 @@ docker network ls
 # Inspecionar network do projeto
 docker network inspect inception_inception
 
-# Verificar que containers estao na rede
+# Verificar que containers estão na rede
 docker network inspect inception_inception --format '{{range .Containers}}{{.Name}} {{end}}'
 ```
 
@@ -144,7 +144,7 @@ docker network inspect inception_inception --format '{{range .Containers}}{{.Nam
 # Listar volumes
 docker volume ls
 
-# Verificar localizacao
+# Verificar localização
 docker volume inspect inception_wordpress_data --format '{{.Options.device}}'
 # Esperado: /home/peda-cos/data/wordpress
 
@@ -159,17 +159,17 @@ ls -la /home/peda-cos/data/mariadb/
 ### Verificar Dockerfiles
 
 ```bash
-# Verificar que nao usa imagens prontas
+# Verificar que não usa imagens prontas
 grep -r "FROM" srcs/requirements/*/Dockerfile
 # Esperado: apenas "FROM debian:oldstable" ou "FROM alpine:X.X"
 
-# Verificar que nao usa latest
+# Verificar que não usa latest
 grep -r ":latest" srcs/requirements/*/Dockerfile
 # Esperado: nenhum resultado
 
 # Verificar senhas hardcoded
 grep -rE "password|passwd|secret" srcs/requirements/*/Dockerfile
-# Esperado: nenhum resultado (ou apenas comentarios)
+# Esperado: nenhum resultado (ou apenas comentários)
 ```
 
 ### Verificar PID 1
@@ -186,13 +186,13 @@ docker exec mariadb ps aux | head -2
 # Esperado: mysqld
 ```
 
-### Verificar Usuarios WordPress
+### Verificar Usuários WordPress
 
 ```bash
-# Listar usuarios
+# Listar usuários
 docker exec wordpress wp user list --path=/var/www/html --allow-root
 
-# Verificar que nao tem "admin" no nome
+# Verificar que não tem "admin" no nome
 docker exec wordpress wp user list --path=/var/www/html --allow-root --field=user_login | grep -i admin
 # Esperado: nenhum resultado
 
@@ -205,7 +205,7 @@ docker exec wordpress wp user list --path=/var/www/html --allow-root --format=ta
 
 ## 3. Testes Automatizados
 
-### Script de Validacao Completo
+### Script de Validação Completo
 
 ```bash
 #!/bin/bash
@@ -364,7 +364,7 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# 8. WordPress usuarios
+# 8. WordPress usuários
 # ----------------------------------------------------------------------------
 echo ""
 echo "--- Verificando usuarios WordPress ---"
@@ -417,10 +417,10 @@ echo -e "  ${GREEN}Validacao concluida com sucesso!${NC}"
 echo "=========================================="
 ```
 
-### Executar Validacao
+### Executar Validação
 
 ```bash
-# Dar permissao
+# Dar permissão
 chmod +x scripts/validate.sh
 
 # Executar
@@ -435,21 +435,21 @@ chmod +x scripts/validate.sh
 
 #### "nginx: [emerg] bind() to 0.0.0.0:443 failed"
 
-**Causa**: Porta 443 ja em uso
+**Causa**: Porta 443 já em uso
 
 ```bash
 # Verificar quem usa a porta
 sudo lsof -i :443
 sudo netstat -tlnp | grep 443
 
-# Parar servico conflitante
+# Parar serviço conflitante
 sudo systemctl stop apache2
 sudo systemctl stop nginx
 ```
 
-#### Certificado SSL invalido
+#### Certificado SSL inválido
 
-**Causa**: Certificado nao existe ou expirado
+**Causa**: Certificado não existe ou expirado
 
 ```bash
 # Verificar certificado
@@ -464,13 +464,13 @@ docker exec nginx openssl x509 -in /etc/nginx/ssl/inception.crt -noout -dates
 
 #### "502 Bad Gateway"
 
-**Causa**: Backend (WordPress) nao esta respondendo
+**Causa**: Backend (WordPress) não está respondendo
 
 ```bash
-# Verificar se WordPress esta rodando
+# Verificar se WordPress está rodando
 docker ps | grep wordpress
 
-# Testar conexao interna
+# Testar conexão interna
 docker exec nginx ping -c 3 wordpress
 docker exec nginx curl -v http://wordpress:9000/
 
@@ -482,22 +482,22 @@ docker logs wordpress
 
 #### "Access denied for user"
 
-**Causa**: Senha incorreta ou usuario nao existe
+**Causa**: Senha incorreta ou usuário não existe
 
 ```bash
-# Verificar variaveis de ambiente
+# Verificar variáveis de ambiente
 docker exec mariadb env | grep MYSQL
 
-# Testar conexao
+# Testar conexão
 docker exec mariadb mysql -u wpuser -p
 
-# Verificar usuarios
+# Verificar usuários
 docker exec mariadb mysql -u root -p -e "SELECT User, Host FROM mysql.user;"
 ```
 
 #### "Can't connect to MySQL server"
 
-**Causa**: MariaDB ainda iniciando ou nao esta rodando
+**Causa**: MariaDB ainda iniciando ou não está rodando
 
 ```bash
 # Verificar status
@@ -510,15 +510,15 @@ docker logs mariadb
 docker exec mariadb ls -la /var/run/mysqld/
 ```
 
-#### Dados perdidos apos restart
+#### Dados perdidos após restart
 
-**Causa**: Volume nao configurado corretamente
+**Causa**: Volume não configurado corretamente
 
 ```bash
 # Verificar mounts
 docker inspect mariadb --format '{{json .Mounts}}' | jq
 
-# Verificar diretorio host
+# Verificar diretório host
 ls -la /home/peda-cos/data/mariadb/
 ```
 
@@ -526,13 +526,13 @@ ls -la /home/peda-cos/data/mariadb/
 
 #### "Error establishing a database connection"
 
-**Causa**: Configuracao de banco incorreta
+**Causa**: Configuração de banco incorreta
 
 ```bash
 # Verificar wp-config.php
 docker exec wordpress cat /var/www/html/wp-config.php | grep DB_
 
-# Testar conexao do WordPress para MariaDB
+# Testar conexão do WordPress para MariaDB
 docker exec wordpress ping -c 3 mariadb
 
 # Verificar se banco existe
@@ -550,19 +550,19 @@ docker exec wordpress sed -i "s/define('WP_DEBUG', false)/define('WP_DEBUG', tru
 # Ver erros
 docker logs wordpress
 
-# Verificar permissoes
+# Verificar permissões
 docker exec wordpress ls -la /var/www/html/
 ```
 
-#### Plugins/Temas nao instalam
+#### Plugins/Temas não instalam
 
-**Causa**: Permissoes de arquivo
+**Causa**: Permissões de arquivo
 
 ```bash
-# Corrigir permissoes
+# Corrigir permissões
 docker exec wordpress chown -R www-data:www-data /var/www/html/wp-content/
 
-# Verificar espaco em disco
+# Verificar espaço em disco
 docker exec wordpress df -h
 ```
 
@@ -576,10 +576,10 @@ docker exec wordpress df -h
 # Ver uso de disco Docker
 docker system df
 
-# Limpar imagens/containers nao usados
+# Limpar imagens/containers não usados
 docker system prune -a
 
-# Limpar volumes nao usados (CUIDADO!)
+# Limpar volumes não usados (CUIDADO!)
 docker volume prune
 ```
 
@@ -622,17 +622,17 @@ docker exec -it nginx sh
 docker exec -it wordpress bash
 docker exec -it mariadb sh
 
-# Como root (se necessario)
+# Como root (se necessário)
 docker exec -it --user root wordpress bash
 ```
 
 ### Inspecionar Container
 
 ```bash
-# Informacoes completas
+# Informações completas
 docker inspect nginx
 
-# Informacoes especificas
+# Informações específicas
 docker inspect nginx --format '{{.NetworkSettings.IPAddress}}'
 docker inspect nginx --format '{{json .Config.Env}}' | jq
 docker inspect nginx --format '{{json .Mounts}}' | jq
@@ -659,14 +659,14 @@ docker exec nginx nslookup wordpress
 # Todos os processos
 docker exec nginx ps aux
 
-# Arvore de processos
+# Árvore de processos
 docker exec nginx pstree -p
 
 # Top em tempo real
 docker exec -it nginx top
 ```
 
-### Verificar Arquivos de Configuracao
+### Verificar Arquivos de Configuração
 
 ```bash
 # NGINX
@@ -693,7 +693,7 @@ docker logs nginx
 docker logs wordpress
 docker logs mariadb
 
-# Ultimas N linhas
+# Últimas N linhas
 docker logs --tail 50 nginx
 
 # Seguir em tempo real
@@ -702,7 +702,7 @@ docker logs -f nginx
 # Com timestamps
 docker logs -t nginx
 
-# Desde horario especifico
+# Desde horário específico
 docker logs --since "2024-01-01T00:00:00" nginx
 ```
 
@@ -713,11 +713,11 @@ docker logs --since "2024-01-01T00:00:00" nginx
 cd srcs
 docker-compose logs -f
 
-# Apenas alguns servicos
+# Apenas alguns serviços
 docker-compose logs -f nginx wordpress
 ```
 
-### Estatisticas de Recursos
+### Estatísticas de Recursos
 
 ```bash
 # Tempo real
@@ -745,67 +745,149 @@ docker events --filter type=container --filter event=die
 
 ---
 
-## 7. Perguntas da Avaliacao
+## 7. Perguntas da Avaliação
 
-### Docker e Virtualizacao
+### Docker e Virtualização
 
-**P: Qual a diferenca entre VM e Container?**
+**P: Qual a diferença entre VM e Container?**
 
-R: VMs virtualizam hardware completo com hypervisor, cada uma com seu proprio OS. Containers compartilham o kernel do host, virtualizando apenas o userspace, sendo mais leves e rapidos.
+R: VMs virtualizam hardware completo com hypervisor, cada uma com seu próprio OS. Containers compartilham o kernel do host, virtualizando apenas o userspace, sendo mais leves e rápidos.
 
-**P: O que e uma imagem Docker?**
+**P: O que é uma imagem Docker?**
 
-R: Template read-only com instrucoes para criar container. Composta de layers empilhadas, onde cada instrucao do Dockerfile cria uma layer.
+R: Template read-only com instruções para criar container. Composta de layers empilhadas, onde cada instrução do Dockerfile cria uma layer.
 
-**P: O que e um container Docker?**
+**P: O que é um container Docker?**
 
-R: Instancia executavel de uma imagem. E a imagem em estado de execucao, com uma layer de escrita no topo.
+R: Instância executável de uma imagem. É a imagem em estado de execução, com uma layer de escrita no topo.
 
-### Configuracao
+### Configuração
 
 **P: Por que TLSv1.2/1.3 apenas?**
 
-R: TLSv1.0 e 1.1 tem vulnerabilidades conhecidas (POODLE, BEAST). TLSv1.2+ sao considerados seguros atualmente.
+R: TLSv1.0 e 1.1 têm vulnerabilidades conhecidas (POODLE, BEAST). TLSv1.2+ são considerados seguros atualmente.
 
-**P: Por que nao usar `network: host`?**
+**P: Por que não usar `network: host`?**
 
-R: `host` remove isolamento de rede, expoe todas as portas, e impede comunicacao por nome de container. Redes customizadas oferecem isolamento e DNS interno.
+R: `host` remove isolamento de rede, expõe todas as portas, e impede comunicação por nome de container. Redes customizadas oferecem isolamento e DNS interno.
 
-**P: Por que usar volumes ao inves de bind mounts?**
+**P: Por que usar volumes ao invés de bind mounts?**
 
-R: Volumes sao gerenciados pelo Docker, funcionam em qualquer OS, tem melhor performance, e podem ser facilmente backupeados.
+R: Volumes são gerenciados pelo Docker, funcionam em qualquer OS, têm melhor performance, e podem ser facilmente backupeados.
 
-**P: Por que nao hardcodar senhas?**
+**P: Por que não hardcodar senhas?**
 
-R: Dockerfiles sao versionados (git), imagens podem ser inspecionadas. Segredos devem vir de environment variables ou Docker Secrets.
+R: Dockerfiles são versionados (git), imagens podem ser inspecionadas. Segredos devem vir de environment variables ou Docker Secrets.
 
 ### WordPress
 
-**P: Por que 2 usuarios?**
+**P: Por que 2 usuários?**
 
-R: Demonstra que o sistema de usuarios funciona. Um admin para gerenciar, outro para simular usuario comum.
+R: Demonstra que o sistema de usuários funciona. Um admin para gerenciar, outro para simular usuário comum.
 
-**P: Por que admin nao pode ter "admin" no nome?**
+**P: Por que admin não pode ter "admin" no nome?**
 
-R: Seguranca. Atacantes tentam "admin" primeiro em ataques de forca bruta.
+R: Segurança. Atacantes tentam "admin" primeiro em ataques de força bruta.
 
-### Boas Praticas
+### Boas Práticas
 
 **P: Por que `restart: unless-stopped`?**
 
-R: Garante que servicos reiniciem apos crashes ou reboots, mantendo alta disponibilidade.
+R: Garante que serviços reiniciem após crashes ou reboots, mantendo alta disponibilidade.
 
-**P: Por que nao usar `tail -f /dev/null`?**
+**P: Por que não usar `tail -f /dev/null`?**
 
-R: E um "hack" que mantem container vivo artificialmente. O daemon deveria rodar em foreground naturalmente.
+R: É um "hack" que mantém container vivo artificialmente. O daemon deveria rodar em foreground naturalmente.
 
-**P: O que e PID 1 e por que importa?**
+**P: O que é PID 1 e por que importa?**
 
-R: Primeiro processo do container. Responsavel por repassar sinais (SIGTERM, etc.) e limpar processos zumbi. Deve ser o daemon principal.
+R: Primeiro processo do container. Responsável por repassar sinais (SIGTERM, etc.) e limpar processos zumbi. Deve ser o daemon principal.
+
+### Dockerfiles e Imagens
+
+**P: Por que não usar imagens prontas (nginx:latest, wordpress:latest)?**
+
+R: O subject exige que você construa as imagens do zero para demonstrar entendimento. Imagens prontas escondem a configuração e não permitem personalização completa.
+
+**P: Por que usar Debian Bullseye (penultimate stable)?**
+
+R: O subject exige a penúltima versão estável. Bullseye é a penúltima (Bookworm é a atual). Isso garante estabilidade e compatibilidade.
+
+**P: Por que não usar a tag :latest?**
+
+R: A tag `latest` é mutável - pode mudar a qualquer momento. Isso causa builds não reproduzíveis e quebras inesperadas. Sempre especifique versões exatas.
+
+**P: O que significa "build from scratch"?**
+
+R: Começar da imagem base (Alpine/Debian) e instalar/configurar todos os pacotes manualmente. Não usar imagens com software pré-instalado.
+
+### Networks e Comunicação
+
+**P: Como os containers se comunicam entre si?**
+
+R: Pelo nome do serviço (DNS interno do Docker). Ex: WordPress conecta ao MariaDB usando hostname `mariadb`. O Docker resolve internamente.
+
+**P: Por que não usar --link?**
+
+R: `--link` é deprecated. Docker networks oferecem DNS automático, isolamento, e não exigem ordem específica de start.
+
+**P: Por que NGINX é o único ponto de entrada?**
+
+R: Segurança. NGINX atua como reverse proxy, terminando TLS e encaminhando para backends internos. Reduz superfície de ataque.
+
+### Volumes e Persistência
+
+**P: O que acontece se eu deletar o container?**
+
+R: Os dados persistem nos volumes. Containers são efêmeros; volumes são persistentes. Ao recriar o container, ele reconecta aos mesmos volumes.
+
+**P: Por que os volumes ficam em /home/peda-cos/data/?**
+
+R: Requisito do subject. Facilita backup e demonstra que dados persistem fora dos containers.
+
+### PHP-FPM e WordPress
+
+**P: Por que WordPress não tem NGINX dentro?**
+
+R: Separação de responsabilidades. WordPress roda apenas PHP-FPM na porta 9000. NGINX é um container separado que encaminha requisições PHP.
+
+**P: O que é PHP-FPM?**
+
+R: FastCGI Process Manager. Gerencia processos PHP de forma eficiente. Escuta na porta 9000 e processa scripts PHP recebidos do NGINX.
+
+**P: Por que wp-cli e não instalação manual?**
+
+R: wp-cli permite automatizar instalação, criar usuários e configurar plugins via script. Essencial para setup não-interativo.
+
+### Bonus - Redis
+
+**P: Para que serve o Redis no WordPress?**
+
+R: Cache de objetos. Armazena queries de banco em memória, reduzindo latência e carga no MariaDB. Melhora performance significativamente.
+
+**P: Como verificar se Redis está funcionando?**
+
+R: No admin do WordPress, o plugin Redis Object Cache mostra status "Connected". Também: `docker exec redis redis-cli ping` deve retornar "PONG".
+
+### Bonus - FTP
+
+**P: Por que o FTP aponta para o volume do WordPress?**
+
+R: Permite upload de arquivos (temas, plugins) diretamente para wp-content via FTP, sem acessar o container.
+
+### Segurança Geral
+
+**P: O que são Docker Secrets?**
+
+R: Mecanismo para passar dados sensíveis (senhas) para containers de forma segura. Montados como arquivos em /run/secrets/, não expostos como variáveis de ambiente.
+
+**P: Por que usar secrets ao invés de variáveis de ambiente?**
+
+R: Variáveis de ambiente podem ser expostas via `docker inspect` ou logs. Secrets são mais seguros, acessíveis apenas dentro do container.
 
 ---
 
-## Comandos Rapidos para Avaliacao
+## Comandos Rápidos para Avaliação
 
 ```bash
 # Status geral
@@ -814,7 +896,7 @@ docker ps -a
 # Verificar TLS
 openssl s_client -connect peda-cos.42.fr:443 -tls1_2
 
-# Verificar usuarios WordPress
+# Verificar usuários WordPress
 docker exec wordpress wp user list --path=/var/www/html --allow-root
 
 # Verificar PID 1
@@ -836,4 +918,4 @@ docker kill nginx && sleep 5 && docker ps | grep nginx
 
 ---
 
-[Voltar ao Indice](00-INDICE.md) | [Anterior: Portainer](12-BONUS-PORTAINER.md) | [Proximo: Referencias](14-REFERENCIAS.md)
+[Voltar ao Índice](00-INDICE.md) | [Anterior: Portainer](12-BONUS-PORTAINER.md) | [Próximo: Referências](14-REFERENCIAS.md)

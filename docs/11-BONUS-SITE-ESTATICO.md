@@ -1,37 +1,37 @@
-# 11 - Bonus: Site Estatico
+# 11 - Bonus: Site Estático
 
-[Voltar ao Indice](./00-INDICE.md) | [Anterior: Adminer](./10-BONUS-ADMINER.md)
+[Voltar ao Índice](./00-INDICE.md) | [Anterior: Adminer](./10-BONUS-ADMINER.md)
 
 ---
 
-## Sumario
+## Sumário
 
-1. [Visao Geral](#1-visao-geral)
+1. [Visão Geral](#1-visao-geral)
 2. [Estrutura de Arquivos](#2-estrutura-de-arquivos)
 3. [Dockerfile](#3-dockerfile)
-4. [Configuracao NGINX](#4-configuracao-nginx)
-5. [Pagina HTML](#5-pagina-html)
+4. [Configuração NGINX](#4-configuracao-nginx)
+5. [Página HTML](#5-pagina-html)
 6. [Estilos CSS](#6-estilos-css)
 7. [Docker Compose](#7-docker-compose)
-8. [Testes e Validacao](#8-testes-e-validacao)
+8. [Testes e Validação](#8-testes-e-validacao)
 
 ---
 
-## 1. Visao Geral
+## 1. Visão Geral
 
-O subject pede um site estatico em qualquer linguagem exceto PHP. Este site e um portfolio pessoal baseado no curriculo da 42, usando apenas:
+O subject pede um site estático em qualquer linguagem exceto PHP. Este site é um portfólio pessoal baseado no currículo da 42, usando apenas:
 
 - HTML5
 - CSS3
 
-Sem JavaScript, sem importacoes externas, 100% estatico.
+Sem JavaScript, sem importações externas, 100% estático.
 
-### Caracteristicas
+### Características
 
 - Design moderno e responsivo
 - Tema escuro com cores ciano e roxo
-- Secoes: Hero, Sobre, Skills, Projetos (por Rank), Contato
-- Todos os projetos do curriculo 42 documentados
+- Seções: Hero, Sobre, Skills, Projetos (por Rank), Contato
+- Todos os projetos do currículo 42 documentados
 - Barras de progresso para habilidades
 - Cards com efeitos hover
 
@@ -83,7 +83,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ---
 
-## 4. Configuracao NGINX
+## 4. Configuração NGINX
 
 ### srcs/requirements/bonus/static-site/conf/nginx.conf
 
@@ -127,7 +127,7 @@ http {
 
 ---
 
-## 5. Pagina HTML
+## 5. Página HTML
 
 ### srcs/requirements/bonus/static-site/www/index.html
 
@@ -576,7 +576,7 @@ http {
 
 ### srcs/requirements/bonus/static-site/www/style.css
 
-O CSS utiliza variaveis CSS para cores e espacamentos, com design responsivo.
+O CSS utiliza variáveis CSS para cores e espaçamentos, com design responsivo.
 
 ```css
 :root {
@@ -1252,9 +1252,9 @@ services:
 
 ---
 
-## 8. Testes e Validacao
+## 8. Testes e Validação
 
-### Iniciar Site Estatico
+### Iniciar Site Estático
 
 ```bash
 docker compose -f srcs/docker-compose.yml build static-site
@@ -1266,19 +1266,19 @@ docker compose -f srcs/docker-compose.yml logs static-site
 
 Abra no navegador: `http://localhost:8081`
 
-### Checklist de Verificacao
+### Checklist de Verificação
 
-- [ ] Pagina carrega corretamente
-- [ ] Navegacao funciona (scroll suave via CSS)
+- [ ] Página carrega corretamente
+- [ ] Navegação funciona (scroll suave via CSS)
 - [ ] Responsivo (testar em diferentes tamanhos)
 - [ ] Sem JavaScript (requisito atendido)
 - [ ] Sem PHP (requisito do subject)
-- [ ] Sem importacoes externas (fontes, CDN, etc)
-- [ ] Todos os projetos do curriculo 42 listados
-- [ ] Notas e carga horaria corretas
+- [ ] Sem importações externas (fontes, CDN, etc)
+- [ ] Todos os projetos do currículo 42 listados
+- [ ] Notas e carga horária corretas
 
 ---
 
-## Proxima Etapa
+## Próxima Etapa
 
 [Ir para 12-BONUS-PORTAINER.md](./12-BONUS-PORTAINER.md)

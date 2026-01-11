@@ -1,14 +1,14 @@
-_Este projeto foi desenvolvido como parte do curriculo da 42 Sao Paulo, utilizando Docker para criar uma infraestrutura completa de servicos web._
+_Este projeto foi desenvolvido como parte do currículo da 42 São Paulo, utilizando Docker para criar uma infraestrutura completa de serviços web._
 
 # Inception
 
-Infraestrutura Docker para hospedar WordPress com NGINX, MariaDB e servicos bonus, implementando boas praticas de containerizacao, seguranca e automacao.
+Infraestrutura Docker para hospedar WordPress com NGINX, MariaDB e serviços bônus, implementando boas práticas de containerização, segurança e automação.
 
 ---
 
-## Descricao
+## Descrição
 
-O projeto Inception consiste em configurar uma pequena infraestrutura composta por diferentes servicos usando Docker e Docker Compose. Cada servico roda em um container dedicado, construido a partir de Dockerfiles customizados baseados em Debian Bullseye.
+O projeto Inception consiste em configurar uma pequena infraestrutura composta por diferentes serviços usando Docker e Docker Compose. Cada serviço roda em um container dedicado, construído a partir de Dockerfiles customizados baseados em Debian Bullseye.
 
 ### Arquitetura
 
@@ -39,34 +39,34 @@ O projeto Inception consiste em configurar uma pequena infraestrutura composta p
     +-----------+
 ```
 
-### Servicos Implementados
+### Serviços Implementados
 
-| Servico         | Descricao             | Porta Interna   |
-| --------------- | --------------------- | --------------- |
-| **NGINX**       | Servidor web com TLS  | 443             |
-| **WordPress**   | CMS com PHP-FPM       | 9000            |
-| **MariaDB**     | Banco de dados        | 3306            |
-| **Redis**       | Cache de objetos      | 6379            |
-| **FTP**         | Servidor de arquivos  | 21, 21000-21010 |
-| **Adminer**     | Gerenciador de BD     | 8080            |
-| **Static Site** | Portfolio HTML/CSS/JS | 8081            |
-| **Portainer**   | Gerenciador Docker    | 9000            |
+| Serviço         | Descrição            | Porta Interna   |
+| --------------- | -------------------- | --------------- |
+| **NGINX**       | Servidor web com TLS | 443             |
+| **WordPress**   | CMS com PHP-FPM      | 9000            |
+| **MariaDB**     | Banco de dados       | 3306            |
+| **Redis**       | Cache de objetos     | 6379            |
+| **FTP**         | Servidor de arquivos | 21, 21000-21010 |
+| **Adminer**     | Gerenciador de BD    | 8080            |
+| **Static Site** | Portfólio HTML/CSS   | 8081            |
+| **Portainer**   | Gerenciador Docker   | 9000            |
 
 ---
 
-## Instrucoes
+## Instruções
 
-### Pre-requisitos
+### Pré-requisitos
 
 - Virtual Machine com Debian/Ubuntu
 - Docker Engine 20.10+
 - Docker Compose 2.0+
-- 4GB RAM minimo
-- 20GB espaco em disco
+- 4GB RAM mínimo
+- 20GB espaço em disco
 
-### Instalacao
+### Instalação
 
-1. **Clonar o repositorio:**
+1. **Clonar o repositório:**
 
    ```bash
    git clone <repository-url> inception
@@ -84,7 +84,7 @@ O projeto Inception consiste em configurar uma pequena infraestrutura composta p
    chmod 600 secrets/*
    ```
 
-3. **Configurar dominio (hosts):**
+3. **Configurar domínio (hosts):**
 
    ```bash
    echo "127.0.0.1 peda-cos.42.fr" | sudo tee -a /etc/hosts
@@ -94,7 +94,7 @@ O projeto Inception consiste em configurar uma pequena infraestrutura composta p
    echo "127.0.0.1 portainer.peda-cos.42.fr" | sudo tee -a /etc/hosts
    ```
 
-4. **Criar diretorios de dados:**
+4. **Criar diretórios de dados:**
 
    ```bash
    mkdir -p /home/peda-cos/data/{wordpress,mariadb,redis,portainer}
@@ -109,10 +109,10 @@ O projeto Inception consiste em configurar uma pequena infraestrutura composta p
 6. **Acessar:**
    - WordPress: https://peda-cos.42.fr
    - Adminer: https://adminer.peda-cos.42.fr
-   - Portfolio: https://static.peda-cos.42.fr
+   - Portfólio: https://static.peda-cos.42.fr
    - Portainer: https://portainer.peda-cos.42.fr
 
-### Comandos Disponiveis
+### Comandos Disponíveis
 
 ```bash
 make          # Build e inicia todos os containers
@@ -122,7 +122,7 @@ make down     # Para containers
 make clean    # Remove containers e imagens
 make fclean   # Remove tudo (incluindo volumes)
 make re       # Rebuild completo
-make logs     # Ver logs de todos os servicos
+make logs     # Ver logs de todos os serviços
 make status   # Ver status dos containers
 ```
 
@@ -130,29 +130,29 @@ make status   # Ver status dos containers
 
 ## Recursos
 
-### Comparacoes Tecnicas
+### Comparações Técnicas
 
-#### Maquinas Virtuais vs Docker Containers
+#### Máquinas Virtuais vs Docker Containers
 
-| Aspecto           | Maquina Virtual       | Container Docker          |
+| Aspecto           | Máquina Virtual       | Container Docker          |
 | ----------------- | --------------------- | ------------------------- |
-| **Virtualizacao** | Hardware (hypervisor) | SO (kernel compartilhado) |
+| **Virtualização** | Hardware (hypervisor) | SO (kernel compartilhado) |
 | **Tamanho**       | GBs (OS completo)     | MBs (apenas app + deps)   |
-| **Inicializacao** | Minutos               | Segundos                  |
-| **Isolamento**    | Completo              | Nivel de processo         |
+| **Inicialização** | Minutos               | Segundos                  |
+| **Isolamento**    | Completo              | Nível de processo         |
 | **Overhead**      | Alto (RAM, CPU)       | Baixo                     |
 | **Portabilidade** | Limitada              | Alta (imagens)            |
 | **Densidade**     | ~10-20 por host       | ~100s por host            |
 
 **Quando usar VMs:**
 
-- Isolamento completo necessario
+- Isolamento completo necessário
 - Diferentes sistemas operacionais
-- Aplicacoes legadas
+- Aplicações legadas
 
 **Quando usar Containers:**
 
-- Microservicos
+- Microsserviços
 - CI/CD pipelines
 - Ambientes de desenvolvimento
 - Escalabilidade horizontal
@@ -161,38 +161,38 @@ make status   # Ver status dos containers
 
 | Aspecto           | Environment Variables  | Docker Secrets             |
 | ----------------- | ---------------------- | -------------------------- |
-| **Armazenamento** | Em memoria, visivel    | Encriptado em disco        |
-| **Acesso**        | `docker inspect` expoe | Apenas dentro do container |
+| **Armazenamento** | Em memória, visível    | Encriptado em disco        |
+| **Acesso**        | `docker inspect` expõe | Apenas dentro do container |
 | **Gerenciamento** | Manual                 | Via Docker/Swarm           |
-| **Rotacao**       | Requer restart         | Pode ser atualizado        |
-| **Auditoria**     | Dificil                | Logs disponiveis           |
+| **Rotação**       | Requer restart         | Pode ser atualizado        |
+| **Auditoria**     | Difícil                | Logs disponíveis           |
 
-**Recomendacao:** Use secrets para senhas, tokens, certificados. Use env vars para configuracoes nao-sensiveis.
+**Recomendação:** Use secrets para senhas, tokens, certificados. Use env vars para configurações não-sensíveis.
 
 #### Docker Network vs Host Network
 
 | Aspecto         | Network Customizada  | Host Network   |
 | --------------- | -------------------- | -------------- |
 | **Isolamento**  | Completo             | Nenhum         |
-| **DNS interno** | Sim (por nome)       | Nao            |
-| **Portas**      | Mapeamento explicito | Todas expostas |
-| **Seguranca**   | Alta                 | Baixa          |
-| **Performance** | Minimo overhead      | Sem overhead   |
+| **DNS interno** | Sim (por nome)       | Não            |
+| **Portas**      | Mapeamento explícito | Todas expostas |
+| **Segurança**   | Alta                 | Baixa          |
+| **Performance** | Mínimo overhead      | Sem overhead   |
 
-**Recomendacao:** Sempre use networks customizadas exceto para casos muito especificos de performance.
+**Recomendação:** Sempre use networks customizadas exceto para casos muito específicos de performance.
 
 #### Docker Volumes vs Bind Mounts
 
 | Aspecto           | Volumes                    | Bind Mounts         |
 | ----------------- | -------------------------- | ------------------- |
-| **Gerenciamento** | Docker gerencia            | Usuario gerencia    |
-| **Localizacao**   | `/var/lib/docker/volumes/` | Qualquer path       |
+| **Gerenciamento** | Docker gerencia            | Usuário gerencia    |
+| **Localização**   | `/var/lib/docker/volumes/` | Qualquer path       |
 | **Portabilidade** | Alta                       | Depende do host     |
 | **Performance**   | Otimizada                  | Varia               |
 | **Backup**        | `docker volume` commands   | Ferramentas do host |
-| **Permissoes**    | Gerenciadas                | Podem conflitar     |
+| **Permissões**    | Gerenciadas                | Podem conflitar     |
 
-**Recomendacao:** Use volumes para dados de aplicacao, bind mounts para desenvolvimento.
+**Recomendação:** Use volumes para dados de aplicação, bind mounts para desenvolvimento.
 
 ### Uso de IA
 
@@ -200,24 +200,24 @@ Este projeto utilizou ferramentas de IA como assistentes no desenvolvimento:
 
 | Ferramenta             | Uso                                              |
 | ---------------------- | ------------------------------------------------ |
-| **Claude (Anthropic)** | Geracao de documentacao, codigo, troubleshooting |
+| **Claude (Anthropic)** | Geração de documentação, código, troubleshooting |
 
 A IA foi utilizada para:
 
-- Gerar estrutura de Dockerfiles seguindo boas praticas
-- Criar scripts de inicializacao
-- Escrever documentacao tecnica
+- Gerar estrutura de Dockerfiles seguindo boas práticas
+- Criar scripts de inicialização
+- Escrever documentação técnica
 - Identificar e resolver problemas comuns
 
-**Importante:** Todo codigo gerado foi revisado, testado e adaptado. O desenvolvedor e capaz de explicar cada componente.
+**Importante:** Todo código gerado foi revisado, testado e adaptado. O desenvolvedor é capaz de explicar cada componente.
 
-### Documentacao Adicional
+### Documentação Adicional
 
 - [Tutorial Completo](docs/00-INDICE.md)
-- [Documentacao do Usuario](USER_DOC.md)
-- [Documentacao do Desenvolvedor](DEV_DOC.md)
+- [Documentação do Usuário](USER_DOC.md)
+- [Documentação do Desenvolvedor](DEV_DOC.md)
 
-### Referencias Externas
+### Referências Externas
 
 - [Docker Documentation](https://docs.docker.com/)
 - [NGINX Documentation](https://nginx.org/en/docs/)
@@ -229,10 +229,10 @@ A IA foi utilizada para:
 
 ## Autor
 
-**peda-cos** - 42 Sao Paulo
+**peda-cos** - 42 São Paulo
 
 ---
 
-## Licenca
+## Licença
 
-Este projeto foi desenvolvido para fins educacionais como parte do curriculo da 42.
+Este projeto foi desenvolvido para fins educacionais como parte do currículo da 42.
