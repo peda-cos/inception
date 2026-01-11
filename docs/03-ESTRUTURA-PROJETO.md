@@ -165,39 +165,6 @@ re: fclean all
 .PHONY: all bonus clean fclean re
 ```
 
-### Como usar o Makefile
-
-```bash
-# Construir e iniciar tudo
-make
-
-# Apenas construir imagens
-make build
-
-# Iniciar containers
-make up
-
-# Ver logs em tempo real
-make logs
-
-# Ver status
-make status
-
-# Parar containers
-make down
-
-# Limpeza total e reconstrução
-make re
-
-# Acessar shell de um container
-make exec SERVICE=nginx
-make exec SERVICE=wordpress
-make exec SERVICE=mariadb
-
-# Ver ajuda
-make help
-```
-
 ---
 
 ## 4. Arquivo .env
