@@ -1,33 +1,33 @@
-# Documentacao do Usuario - Inception
+# Documentação do Usuário - Inception
 
-Guia de uso do sistema para usuarios finais.
+Guia de uso do sistema para usuários finais.
 
 ---
 
-## Indice
+## Índice
 
-1. [Introducao](#introducao)
+1. [Introdução](#introdução)
 2. [Acessando o Sistema](#acessando-o-sistema)
 3. [WordPress](#wordpress)
 4. [Adminer](#adminer)
-5. [Portfolio](#portfolio)
+5. [Portfólio](#portfólio)
 6. [Portainer](#portainer)
 7. [FTP](#ftp)
-8. [Solucao de Problemas](#solucao-de-problemas)
+8. [Solução de Problemas](#solução-de-problemas)
 
 ---
 
-## Introducao
+## Introdução
 
-O Inception e uma infraestrutura web composta por varios servicos. Este guia explica como acessar e utilizar cada um deles.
+O Inception é uma infraestrutura web composta por vários serviços. Este guia explica como acessar e utilizar cada um deles.
 
-### Servicos Disponiveis
+### Serviços Disponíveis
 
-| Servico   | URL                              | Descricao                     |
+| Serviço   | URL                              | Descrição                     |
 | --------- | -------------------------------- | ----------------------------- |
 | WordPress | https://peda-cos.42.fr           | Blog/Site principal           |
 | Adminer   | https://adminer.peda-cos.42.fr   | Gerenciador de banco de dados |
-| Portfolio | https://static.peda-cos.42.fr    | Site estatico de portfolio    |
+| Portfólio | https://static.peda-cos.42.fr    | Site estático de portfólio    |
 | Portainer | https://portainer.peda-cos.42.fr | Gerenciador de containers     |
 
 ---
@@ -37,18 +37,18 @@ O Inception e uma infraestrutura web composta por varios servicos. Este guia exp
 ### Requisitos
 
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- Conexao com a rede onde o servidor esta hospedado
+- Conexão com a rede onde o servidor está hospedado
 - Credenciais de acesso (fornecidas pelo administrador)
 
 ### Certificado SSL
 
-O sistema utiliza certificados autoassinados. No primeiro acesso, voce vera um aviso de seguranca:
+O sistema utiliza certificados autoassinados. No primeiro acesso, você verá um aviso de segurança:
 
-1. Clique em **"Avancado"** ou **"Mostrar detalhes"**
+1. Clique em **"Avançado"** ou **"Mostrar detalhes"**
 2. Clique em **"Continuar para o site"** ou **"Aceitar o risco"**
-3. O navegador lembrara sua escolha
+3. O navegador lembrará sua escolha
 
-> **Nota:** Este aviso e normal para certificados autoassinados em ambiente de desenvolvimento.
+> **Nota:** Este aviso é normal para certificados autoassinados em ambiente de desenvolvimento.
 
 ---
 
@@ -63,59 +63,59 @@ https://peda-cos.42.fr
 ### Login
 
 1. Acesse `https://peda-cos.42.fr/wp-admin`
-2. Insira seu usuario e senha
+2. Insira seu usuário e senha
 3. Clique em "Entrar"
 
 ### Painel Administrativo
 
-Apos o login, voce tera acesso ao painel:
+Após o login, você terá acesso ao painel:
 
 ```
 +----------------------------------------------------------+
 |  Dashboard                                                |
 +----------------------------------------------------------+
-| Posts     | Todas as publicacoes do blog                 |
-| Midia     | Biblioteca de imagens e arquivos             |
-| Paginas   | Paginas estaticas do site                    |
-| Aparencia | Temas e personalizacao                       |
-| Plugins   | Extensoes do WordPress                       |
-| Usuarios  | Gerenciamento de usuarios                    |
-| Config.   | Configuracoes gerais do site                 |
+| Posts     | Todas as publicações do blog                 |
+| Mídia     | Biblioteca de imagens e arquivos             |
+| Páginas   | Páginas estáticas do site                    |
+| Aparência | Temas e personalização                       |
+| Plugins   | Extensões do WordPress                       |
+| Usuários  | Gerenciamento de usuários                    |
+| Config.   | Configurações gerais do site                 |
 +----------------------------------------------------------+
 ```
 
-### Criando uma Publicacao
+### Criando uma Publicação
 
 1. No menu lateral, clique em **"Posts"**
 2. Clique em **"Adicionar Novo"**
-3. Digite o titulo e conteudo
+3. Digite o título e conteúdo
 4. Clique em **"Publicar"**
 
-### Enviando Midia
+### Enviando Mídia
 
-1. No menu lateral, clique em **"Midia"**
+1. No menu lateral, clique em **"Mídia"**
 2. Clique em **"Adicionar Nova"**
 3. Arraste arquivos ou clique para selecionar
 4. Aguarde o upload completar
 
-### Gerenciando Usuarios
+### Gerenciando Usuários
 
-> **Nota:** Apenas administradores podem gerenciar usuarios.
+> **Nota:** Apenas administradores podem gerenciar usuários.
 
-1. Va em **"Usuarios"** > **"Todos os Usuarios"**
+1. Vá em **"Usuários"** > **"Todos os Usuários"**
 2. Para adicionar: clique em **"Adicionar Novo"**
 3. Preencha os dados e selecione o papel (role)
-4. Clique em **"Adicionar Novo Usuario"**
+4. Clique em **"Adicionar Novo Usuário"**
 
-#### Papeis de Usuario
+#### Papéis de Usuário
 
-| Papel         | Permissoes                                 |
+| Papel         | Permissões                                 |
 | ------------- | ------------------------------------------ |
 | Administrador | Acesso total ao sistema                    |
 | Editor        | Pode publicar e editar todos os posts      |
-| Autor         | Pode publicar e editar seus proprios posts |
-| Colaborador   | Pode escrever, mas nao publicar            |
-| Assinante     | Apenas visualizar conteudo                 |
+| Autor         | Pode publicar e editar seus próprios posts |
+| Colaborador   | Pode escrever, mas não publicar            |
+| Assinante     | Apenas visualizar conteúdo                 |
 
 ---
 
@@ -133,13 +133,13 @@ https://adminer.peda-cos.42.fr
 2. Preencha os campos:
    - **Sistema:** MySQL
    - **Servidor:** mariadb
-   - **Usuario:** (fornecido pelo admin)
+   - **Usuário:** (fornecido pelo admin)
    - **Senha:** (fornecida pelo admin)
    - **Base de dados:** wordpress
 
 3. Clique em **"Entrar"**
 
-### Navegacao
+### Navegação
 
 ```
 +----------------------------------------------------------+
@@ -156,8 +156,8 @@ https://adminer.peda-cos.42.fr
 ### Visualizando Dados
 
 1. Clique no nome da tabela desejada
-2. Voce vera os dados em formato de tabela
-3. Use os filtros para buscar registros especificos
+2. Você verá os dados em formato de tabela
+3. Use os filtros para buscar registros específicos
 
 ### Executando SQL
 
@@ -179,11 +179,11 @@ SELECT * FROM wp_users;
 4. Clique em **"Exportar"**
 5. Salve o arquivo baixado
 
-> **Importante:** Faca backups regulares dos seus dados!
+> **Importante:** Faça backups regulares dos seus dados!
 
 ---
 
-## Portfolio
+## Portfólio
 
 ### URL de Acesso
 
@@ -193,18 +193,18 @@ https://static.peda-cos.42.fr
 
 ### Sobre
 
-O Portfolio e um site estatico que apresenta informacoes sobre o desenvolvedor. Nao requer login.
+O Portfólio é um site estático que apresenta informações sobre o desenvolvedor. Não requer login.
 
-### Navegacao
+### Navegação
 
-- **Sobre:** Informacoes pessoais e biografia
-- **Habilidades:** Tecnologias e competencias
-- **Projetos:** Portfolio de trabalhos realizados
-- **Contato:** Formulario e informacoes de contato
+- **Sobre:** Informações pessoais e biografia
+- **Habilidades:** Tecnologias e competências
+- **Projetos:** Portfólio de trabalhos realizados
+- **Contato:** Formulário e informações de contato
 
-### Personalizacao
+### Personalização
 
-Para alterar o conteudo do portfolio, contate o desenvolvedor/administrador do sistema.
+Para alterar o conteúdo do portfólio, contate o desenvolvedor/administrador do sistema.
 
 ---
 
@@ -218,10 +218,10 @@ https://portainer.peda-cos.42.fr
 
 ### Primeiro Acesso
 
-No primeiro acesso, voce devera criar uma conta de administrador:
+No primeiro acesso, você deverá criar uma conta de administrador:
 
 1. Acesse o Portainer
-2. Defina um usuario e senha (minimo 12 caracteres)
+2. Defina um usuário e senha (mínimo 12 caracteres)
 3. Clique em **"Create user"**
 4. Selecione **"Docker"** como ambiente
 5. Clique em **"Connect"**
@@ -233,7 +233,7 @@ No primeiro acesso, voce devera criar uma conta de administrador:
 |  Portainer - Dashboard                                    |
 +----------------------------------------------------------+
 | Containers | Ver e gerenciar containers                  |
-| Images     | Imagens Docker disponiveis                  |
+| Images     | Imagens Docker disponíveis                  |
 | Volumes    | Volumes de dados                             |
 | Networks   | Redes Docker                                 |
 +----------------------------------------------------------+
@@ -242,8 +242,8 @@ No primeiro acesso, voce devera criar uma conta de administrador:
 ### Gerenciando Containers
 
 1. Clique em **"Containers"**
-2. Voce vera a lista de todos os containers
-3. Acoes disponiveis:
+2. Você verá a lista de todos os containers
+3. Ações disponíveis:
    - **Start/Stop:** Iniciar ou parar
    - **Restart:** Reiniciar
    - **Logs:** Ver logs do container
@@ -253,10 +253,10 @@ No primeiro acesso, voce devera criar uma conta de administrador:
 
 1. Clique no nome do container
 2. Clique em **"Logs"**
-3. Opcoes:
+3. Opções:
    - Auto-refresh: Atualizar automaticamente
    - Timestamps: Mostrar data/hora
-   - Lines: Numero de linhas
+   - Lines: Número de linhas
 
 ### Console do Container
 
@@ -264,19 +264,19 @@ No primeiro acesso, voce devera criar uma conta de administrador:
 2. Clique em **"Console"**
 3. Selecione o shell (`/bin/sh` ou `/bin/bash`)
 4. Clique em **"Connect"**
-5. Voce tera acesso ao terminal do container
+5. Você terá acesso ao terminal do container
 
 ---
 
 ## FTP
 
-### Informacoes de Conexao
+### Informações de Conexão
 
 | Campo    | Valor                             |
 | -------- | --------------------------------- |
 | Servidor | peda-cos.42.fr                    |
 | Porta    | 21                                |
-| Usuario  | ftpuser (ou conforme configurado) |
+| Usuário  | ftpuser (ou conforme configurado) |
 | Senha    | (fornecida pelo admin)            |
 | Modo     | Passivo                           |
 
@@ -291,10 +291,10 @@ No primeiro acesso, voce devera criar uma conta de administrador:
 1. Abra o FileZilla
 2. Preencha:
    - Host: `peda-cos.42.fr`
-   - Usuario: `ftpuser`
+   - Usuário: `ftpuser`
    - Senha: (sua senha)
    - Porta: `21`
-3. Clique em **"Conexao Rapida"**
+3. Clique em **"Conexão Rápida"**
 
 ### Estrutura de Arquivos
 
@@ -304,119 +304,119 @@ No primeiro acesso, voce devera criar uma conta de administrador:
 ├── plugins/               <- Plugins
 ├── uploads/               <- Arquivos enviados
 │   └── 2024/              <- Organizado por ano
-│       └── 01/            <- E por mes
+│       └── 01/            <- E por mês
 └── languages/             <- Arquivos de idioma
 ```
 
 ### Enviando Arquivos
 
-1. Navegue ate a pasta desejada no servidor (lado direito)
-2. Navegue ate a pasta local com seus arquivos (lado esquerdo)
+1. Navegue até a pasta desejada no servidor (lado direito)
+2. Navegue até a pasta local com seus arquivos (lado esquerdo)
 3. Arraste os arquivos da esquerda para a direita
-4. Aguarde a transferencia completar
+4. Aguarde a transferência completar
 
 ### Baixando Arquivos
 
-1. Navegue ate a pasta no servidor com os arquivos
-2. Navegue ate a pasta local onde deseja salvar
+1. Navegue até a pasta no servidor com os arquivos
+2. Navegue até a pasta local onde deseja salvar
 3. Arraste os arquivos da direita para a esquerda
 
 ---
 
-## Solucao de Problemas
+## Solução de Problemas
 
-### Nao Consigo Acessar o Site
+### Não Consigo Acessar o Site
 
-**Problema:** Pagina nao carrega ou erro de conexao
+**Problema:** Página não carrega ou erro de conexão
 
-**Solucoes:**
+**Soluções:**
 
 1. Verifique se digitou a URL corretamente
-2. Verifique sua conexao com a internet
+2. Verifique sua conexão com a internet
 3. Limpe o cache do navegador (Ctrl+Shift+Delete)
 4. Tente outro navegador
 5. Contate o administrador
 
 ### Aviso de Certificado
 
-**Problema:** Navegador mostra aviso de seguranca
+**Problema:** Navegador mostra aviso de segurança
 
-**Solucao:**
+**Solução:**
 
-- Isso e esperado com certificados autoassinados
-- Clique em "Avancado" e aceite continuar
-- Isso NAO significa que o site e inseguro
+- Isso é esperado com certificados autoassinados
+- Clique em "Avançado" e aceite continuar
+- Isso NÃO significa que o site é inseguro
 
 ### Esqueci Minha Senha (WordPress)
 
-**Problema:** Nao lembro a senha do WordPress
+**Problema:** Não lembro a senha do WordPress
 
-**Solucoes:**
+**Soluções:**
 
 1. Na tela de login, clique em **"Perdeu a senha?"**
-2. Digite seu email ou usuario
+2. Digite seu email ou usuário
 3. Clique em **"Obter nova senha"**
-4. Verifique seu email e siga as instrucoes
+4. Verifique seu email e siga as instruções
 
-Se nao receber o email, contate o administrador.
+Se não receber o email, contate o administrador.
 
 ### Erro ao Fazer Upload
 
-**Problema:** Nao consigo enviar arquivos
+**Problema:** Não consigo enviar arquivos
 
-**Possiveis causas:**
+**Possíveis causas:**
 
 - Arquivo muito grande (limite: 64MB)
-- Tipo de arquivo nao permitido
-- Espaco em disco cheio
+- Tipo de arquivo não permitido
+- Espaço em disco cheio
 
-**Solucoes:**
+**Soluções:**
 
 1. Reduza o tamanho do arquivo
 2. Converta para formato aceito (jpg, png, pdf)
 3. Contate o administrador se persistir
 
-### FTP Nao Conecta
+### FTP Não Conecta
 
-**Problema:** Erro de conexao FTP
+**Problema:** Erro de conexão FTP
 
-**Solucoes:**
+**Soluções:**
 
-1. Verifique usuario e senha
-2. Confirme que esta usando modo passivo
-3. Verifique se firewall nao esta bloqueando
+1. Verifique usuário e senha
+2. Confirme que está usando modo passivo
+3. Verifique se firewall não está bloqueando
 4. Tente porta 21 especificamente
 
 ### Site Lento
 
-**Problema:** Paginas demoram para carregar
+**Problema:** Páginas demoram para carregar
 
-**Solucoes:**
+**Soluções:**
 
 1. Limpe cache do navegador
-2. Tente em outro horario
-3. Verifique sua conexao de internet
+2. Tente em outro horário
+3. Verifique sua conexão de internet
 4. Contate o administrador
 
 ---
 
 ## Contato e Suporte
 
-Para problemas tecnicos ou duvidas, contate:
+Para problemas técnicos ou dúvidas, contate:
 
 - **Administrador:** peda-cos
 - **Email:** peda-cos@student.42sp.org.br
 
-### Informacoes Uteis para Suporte
+### Informações Úteis para Suporte
 
 Ao reportar um problema, inclua:
 
-- Qual servico esta com problema (WordPress, FTP, etc.)
-- Qual acao estava tentando fazer
+- Qual serviço está com problema (WordPress, FTP, etc.)
+- Qual ação estava tentando fazer
 - Mensagem de erro exata (screenshot ajuda!)
-- Navegador e versao que esta usando
-- Horario aproximado do problema
+- Navegador e versão que está usando
+- Horário aproximado do problema
 
 ---
 
-_Documentacao do Usuario - Inception v1.0 - Janeiro 2026_
+_Documentação do Usuário - Inception v1.0 - Janeiro 2026_

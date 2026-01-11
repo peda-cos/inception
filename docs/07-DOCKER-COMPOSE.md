@@ -60,8 +60,6 @@ O Docker Compose orquestra todos os serviços do Inception:
 ### srcs/docker-compose.yml
 
 ```yaml
-version: "3.8"
-
 services:
   mariadb:
     build:
@@ -187,13 +185,9 @@ secrets:
 
 ## 3. Explicação Detalhada
 
-### 3.1 Versão
+### 3.1 Estrutura Básica
 
-```yaml
-version: "3.8"
-```
-
-Usar versão 3.8 para recursos modernos como `condition: service_healthy`.
+> **Nota:** A diretiva `version:` foi removida pois está obsoleta no Docker Compose moderno (v2+). O Docker ignora essa linha e emite um warning.
 
 ### 3.2 Serviços
 

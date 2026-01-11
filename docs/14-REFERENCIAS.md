@@ -1,25 +1,25 @@
-# 14. Referencias e Recursos
+# 14. Referências e Recursos
 
-[Voltar ao Indice](00-INDICE.md) | [Anterior: Validacao](13-VALIDACAO-TROUBLESHOOTING.md)
+[Voltar ao Índice](00-INDICE.md) | [Anterior: Validação](13-VALIDACAO-TROUBLESHOOTING.md)
 
 ---
 
-## Indice
+## Índice
 
-1. [Documentacao Oficial](#1-documentacao-oficial)
+1. [Documentação Oficial](#1-documentacao-oficial)
 2. [Tutoriais e Guias](#2-tutoriais-e-guias)
-3. [Ferramentas Uteis](#3-ferramentas-uteis)
+3. [Ferramentas Úteis](#3-ferramentas-uteis)
 4. [Livros Recomendados](#4-livros-recomendados)
 5. [Comunidade](#5-comunidade)
-6. [Projetos de Referencia](#6-projetos-de-referencia)
-7. [Videos e Cursos](#7-videos-e-cursos)
+6. [Projetos de Referência](#6-projetos-de-referencia)
+7. [Vídeos e Cursos](#7-videos-e-cursos)
 8. [Cheat Sheets](#8-cheat-sheets)
-9. [Seguranca](#9-seguranca)
+9. [Segurança](#9-seguranca)
 10. [Uso de IA](#10-uso-de-ia)
 
 ---
 
-## 1. Documentacao Oficial
+## 1. Documentação Oficial
 
 ### Docker
 
@@ -91,20 +91,20 @@
 
 ---
 
-## 3. Ferramentas Uteis
+## 3. Ferramentas Úteis
 
-### Analise e Debug
+### Análise e Debug
 
-| Ferramenta      | Descricao                        | Link                                        |
+| Ferramenta      | Descrição                        | Link                                        |
 | --------------- | -------------------------------- | ------------------------------------------- |
 | **dive**        | Analisa layers de imagens Docker | https://github.com/wagoodman/dive           |
 | **ctop**        | Top-like para containers         | https://github.com/bcicen/ctop              |
 | **lazydocker**  | TUI para gerenciar Docker        | https://github.com/jesseduffield/lazydocker |
 | **docker-slim** | Otimiza imagens Docker           | https://github.com/docker-slim/docker-slim  |
 
-### Validacao
+### Validação
 
-| Ferramenta   | Descricao                    | Link                                   |
+| Ferramenta   | Descrição                    | Link                                   |
 | ------------ | ---------------------------- | -------------------------------------- |
 | **hadolint** | Linter para Dockerfiles      | https://github.com/hadolint/hadolint   |
 | **dockle**   | Security linter para imagens | https://github.com/goodwithtech/dockle |
@@ -112,19 +112,19 @@
 
 ### SSL/TLS
 
-| Ferramenta     | Descricao                 | Link                                   |
+| Ferramenta     | Descrição                 | Link                                   |
 | -------------- | ------------------------- | -------------------------------------- |
-| **SSL Labs**   | Teste de configuracao SSL | https://www.ssllabs.com/ssltest/       |
+| **SSL Labs**   | Teste de configuração SSL | https://www.ssllabs.com/ssltest/       |
 | **testssl.sh** | Script para testar TLS    | https://github.com/drwetter/testssl.sh |
 | **mkcert**     | Cria certificados locais  | https://github.com/FiloSottile/mkcert  |
 
 ### Monitoramento
 
-| Ferramenta     | Descricao                 | Link                      |
+| Ferramenta     | Descrição                 | Link                      |
 | -------------- | ------------------------- | ------------------------- |
 | **Portainer**  | UI para gerenciar Docker  | https://www.portainer.io/ |
 | **Prometheus** | Monitoramento e alertas   | https://prometheus.io/    |
-| **Grafana**    | Dashboards e visualizacao | https://grafana.com/      |
+| **Grafana**    | Dashboards e visualização | https://grafana.com/      |
 
 ---
 
@@ -135,7 +135,7 @@
 1. **Docker Deep Dive** - Nigel Poulton
    - Excelente para entender Docker em profundidade
 2. **Docker in Action** - Jeff Nickoloff
-   - Abordagem pratica com exemplos
+   - Abordagem prática com exemplos
 
 3. **The Docker Book** - James Turnbull
    - Bom para iniciantes
@@ -147,16 +147,16 @@
 2. **How Linux Works** - Brian Ward
    - Entender o que acontece "por baixo"
 
-### Seguranca
+### Segurança
 
 1. **Docker Security** - Adrian Mouat
-   - Praticas de seguranca em containers
+   - Práticas de segurança em containers
 
 ---
 
 ## 5. Comunidade
 
-### Forums e Q&A
+### Fóruns e Q&A
 
 | Plataforma              | Link                                              |
 | ----------------------- | ------------------------------------------------- |
@@ -172,22 +172,22 @@
 | Docker Community Slack | https://dockr.ly/slack |
 | CNCF Slack             | https://slack.cncf.io/ |
 
-### 42 Especifico
+### 42 Específico
 
-| Recurso      | Descricao                                              |
+| Recurso      | Descrição                                              |
 | ------------ | ------------------------------------------------------ |
 | 42 Intra     | Recursos oficiais do projeto                           |
 | Discord 42sp | Canal da comunidade brasileira                         |
-| GitHub 42    | Repositorios de colegas (para referencia, nao copiar!) |
+| GitHub 42    | Repositórios de colegas (para referência, não copiar!) |
 
 ---
 
-## 6. Projetos de Referencia
+## 6. Projetos de Referência
 
 ### Arquiteturas Docker
 
 ```
-# Estruturas de referencia para aprender
+# Estruturas de referência para aprender
 https://github.com/docker/awesome-compose
 
 # Exemplos oficiais Docker
@@ -196,20 +196,20 @@ https://github.com/docker/docker.github.io/tree/master/samples
 
 ### LEMP Stack (Linux, NGINX, MariaDB, PHP)
 
-Projetos similares ao Inception que podem servir de inspiracao:
+Projetos similares ao Inception que podem servir de inspiração:
 
 - Docker LEMP Stack: https://github.com/stevenliebregt/docker-lemp
 - Laradock: https://github.com/laradock/laradock
 
-**IMPORTANTE**: Use apenas como referencia para entender conceitos. O subject exige que voce construa do zero!
+**IMPORTANTE**: Use apenas como referência para entender conceitos. O subject exige que você construa do zero!
 
 ---
 
-## 7. Videos e Cursos
+## 7. Vídeos e Cursos
 
 ### YouTube - Docker
 
-| Canal               | Conteudo                 |
+| Canal               | Conteúdo                 |
 | ------------------- | ------------------------ |
 | TechWorld with Nana | Docker Tutorial completo |
 | NetworkChuck        | Docker para iniciantes   |
@@ -225,13 +225,13 @@ Projetos similares ao Inception que podem servir de inspiracao:
 | Linux Academy   | Docker Deep Dive                     |
 | Coursera        | Containerized Applications on AWS    |
 
-### Em Portugues
+### Em Português
 
 | Recurso     | Link                                |
 | ----------- | ----------------------------------- |
 | LinuxTips   | https://www.youtube.com/c/LinuxTips |
 | Full Cycle  | https://www.youtube.com/c/FullCycle |
-| Fabio Akita | Videos sobre Docker/DevOps          |
+| Fabio Akita | Vídeos sobre Docker/DevOps          |
 
 ---
 
@@ -247,12 +247,12 @@ docker run <image>           # Cria e inicia container
 docker start <container>     # Inicia container parado
 docker stop <container>      # Para container
 docker rm <container>        # Remove container
-docker logs <container>      # Ve logs
+docker logs <container>      # Vê logs
 docker exec -it <c> sh       # Entra no container
 
 # Imagens
 docker images                # Lista imagens
-docker build -t <name> .     # Constroi imagem
+docker build -t <name> .     # Constrói imagem
 docker rmi <image>           # Remove imagem
 docker pull <image>          # Baixa imagem
 
@@ -267,22 +267,22 @@ docker network create <name> # Cria network
 docker network inspect <n>   # Inspeciona network
 
 # Limpeza
-docker system prune          # Remove recursos nao usados
-docker system prune -a       # Remove TUDO nao usado
+docker system prune          # Remove recursos não usados
+docker system prune -a       # Remove TUDO não usado
 ```
 
 ### Docker Compose
 
 ```bash
-docker-compose up             # Inicia servicos
+docker-compose up             # Inicia serviços
 docker-compose up -d          # Inicia em background
 docker-compose up --build     # Rebuild e inicia
 docker-compose down           # Para e remove
-docker-compose down -v        # Remove volumes tambem
-docker-compose logs           # Ve logs
+docker-compose down -v        # Remove volumes também
+docker-compose logs           # Vê logs
 docker-compose logs -f        # Segue logs
-docker-compose ps             # Lista servicos
-docker-compose exec <s> sh    # Entra no servico
+docker-compose ps             # Lista serviços
+docker-compose exec <s> sh    # Entra no serviço
 docker-compose build          # Apenas build
 docker-compose pull           # Atualiza imagens
 ```
@@ -290,17 +290,17 @@ docker-compose pull           # Atualiza imagens
 ### NGINX
 
 ```bash
-nginx -t                      # Testa configuracao
+nginx -t                      # Testa configuração
 nginx -s reload               # Recarrega config
 nginx -s stop                 # Para NGINX
-nginx -V                      # Mostra versao e modulos
+nginx -V                      # Mostra versão e módulos
 ```
 
 ### MariaDB/MySQL
 
 ```bash
 mysql -u root -p              # Conecta como root
-mysqladmin ping               # Testa se esta rodando
+mysqladmin ping               # Testa se está rodando
 mysqldump <db> > backup.sql   # Backup
 mysql <db> < backup.sql       # Restore
 ```
@@ -310,8 +310,8 @@ mysql <db> < backup.sql       # Restore
 ```bash
 wp core download              # Baixa WordPress
 wp core install               # Instala WordPress
-wp user list                  # Lista usuarios
-wp user create <u> <e>        # Cria usuario
+wp user list                  # Lista usuários
+wp user create <u> <e>        # Cria usuário
 wp plugin list                # Lista plugins
 wp plugin install <p>         # Instala plugin
 wp theme list                 # Lista temas
@@ -321,9 +321,9 @@ wp db check                   # Verifica banco
 
 ---
 
-## 9. Seguranca
+## 9. Segurança
 
-### Recursos de Seguranca
+### Recursos de Segurança
 
 | Recurso                        | Link                                                                            |
 | ------------------------------ | ------------------------------------------------------------------------------- |
@@ -332,17 +332,17 @@ wp db check                   # Verifica banco
 | Snyk Container Security        | https://snyk.io/learn/container-security/                                       |
 | Docker Security Best Practices | https://docs.docker.com/develop/security-best-practices/                        |
 
-### Checklist de Seguranca
+### Checklist de Segurança
 
-- [ ] Nao rodar containers como root
-- [ ] Usar imagens base minimas (Alpine)
+- [ ] Não rodar containers como root
+- [ ] Usar imagens base mínimas (Alpine)
 - [ ] Escanear imagens com Trivy/Snyk
-- [ ] Nao expor Docker socket
-- [ ] Usar secrets ao inves de env vars para senhas
+- [ ] Não expor Docker socket
+- [ ] Usar secrets ao invés de env vars para senhas
 - [ ] Manter imagens atualizadas
-- [ ] Limitar recursos (CPU, memoria)
-- [ ] Usar read-only filesystem quando possivel
-- [ ] Nao usar `--privileged`
+- [ ] Limitar recursos (CPU, memória)
+- [ ] Usar read-only filesystem quando possível
+- [ ] Não usar `--privileged`
 - [ ] Implementar health checks
 
 ---
@@ -355,76 +355,76 @@ Este projeto utilizou as seguintes ferramentas de IA como assistentes:
 
 | Ferramenta             | Uso                                                                              |
 | ---------------------- | -------------------------------------------------------------------------------- |
-| **Claude (Anthropic)** | Assistente principal para geracao de documentacao, codigo e explicacoes tecnicas |
+| **Claude (Anthropic)** | Assistente principal para geração de documentação, código e explicações técnicas |
 
 ### Como a IA foi Utilizada
 
-1. **Geracao de Documentacao**
-   - Criacao da estrutura do tutorial
-   - Redacao de explicacoes tecnicas
-   - Formatacao Markdown
+1. **Geração de Documentação**
+   - Criação da estrutura do tutorial
+   - Redação de explicações técnicas
+   - Formatação Markdown
 
-2. **Codigo e Configuracao**
-   - Dockerfiles com boas praticas
-   - Scripts de inicializacao
-   - Configuracoes NGINX, PHP-FPM, MariaDB
+2. **Código e Configuração**
+   - Dockerfiles com boas práticas
+   - Scripts de inicialização
+   - Configurações NGINX, PHP-FPM, MariaDB
    - Docker Compose completo
 
 3. **Troubleshooting**
-   - Identificacao de problemas comuns
-   - Sugestoes de solucoes
-   - Scripts de validacao
+   - Identificação de problemas comuns
+   - Sugestões de soluções
+   - Scripts de validação
 
-4. **Revisao e Melhoria**
-   - Verificacao de conformidade com o subject
-   - Sugestoes de seguranca
-   - Otimizacoes de codigo
+4. **Revisão e Melhoria**
+   - Verificação de conformidade com o subject
+   - Sugestões de segurança
+   - Otimizações de código
 
-### Consideracoes sobre Uso de IA
+### Considerações sobre Uso de IA
 
 **O que a IA fez bem:**
 
-- Estruturar conteudo de forma organizada
+- Estruturar conteúdo de forma organizada
 - Explicar conceitos complexos de forma clara
-- Gerar codigo funcional seguindo boas praticas
+- Gerar código funcional seguindo boas práticas
 - Identificar potenciais problemas
 
-**O que ainda requer atencao humana:**
+**O que ainda requer atenção humana:**
 
-- Testar todo o codigo em ambiente real
-- Validar configuracoes para seu caso especifico
+- Testar todo o código em ambiente real
+- Validar configurações para seu caso específico
 - Adaptar senhas e credenciais
-- Verificar compatibilidade de versoes
+- Verificar compatibilidade de versões
 
-### Transparencia
+### Transparência
 
-Conforme solicitado pelo subject da 42, esta secao documenta o uso de IA generativa no desenvolvimento do projeto. O codigo e documentacao foram gerados com assistencia de IA, mas devem ser:
+Conforme solicitado pelo subject da 42, esta seção documenta o uso de IA generativa no desenvolvimento do projeto. O código e documentação foram gerados com assistência de IA, mas devem ser:
 
-1. **Compreendidos** - Voce deve entender cada linha
+1. **Compreendidos** - Você deve entender cada linha
 2. **Testados** - Executar e validar em seu ambiente
 3. **Adaptados** - Ajustar para suas necessidades
-4. **Defendidos** - Ser capaz de explicar na avaliacao
+4. **Defendidos** - Ser capaz de explicar na avaliação
 
 ---
 
-## Links Rapidos
+## Links Rápidos
 
-### Documentacao do Projeto
+### Documentação do Projeto
 
-| Arquivo                                                            | Conteudo                 |
+| Arquivo                                                            | Conteúdo                 |
 | ------------------------------------------------------------------ | ------------------------ |
-| [00-INDICE.md](00-INDICE.md)                                       | Indice geral e checklist |
+| [00-INDICE.md](00-INDICE.md)                                       | Índice geral e checklist |
 | [01-FUNDAMENTOS.md](01-FUNDAMENTOS.md)                             | Teoria Docker            |
 | [02-PREPARACAO-AMBIENTE.md](02-PREPARACAO-AMBIENTE.md)             | Setup VM e Docker        |
-| [03-ESTRUTURA-PROJETO.md](03-ESTRUTURA-PROJETO.md)                 | Organizacao de arquivos  |
+| [03-ESTRUTURA-PROJETO.md](03-ESTRUTURA-PROJETO.md)                 | Organização de arquivos  |
 | [04-MARIADB.md](04-MARIADB.md)                                     | Container de banco       |
 | [05-WORDPRESS.md](05-WORDPRESS.md)                                 | Container WordPress      |
 | [06-NGINX.md](06-NGINX.md)                                         | Container NGINX + TLS    |
-| [07-DOCKER-COMPOSE.md](07-DOCKER-COMPOSE.md)                       | Orquestracao             |
+| [07-DOCKER-COMPOSE.md](07-DOCKER-COMPOSE.md)                       | Orquestração             |
 | [08-BONUS-REDIS.md](08-BONUS-REDIS.md)                             | Cache Redis              |
 | [09-BONUS-FTP.md](09-BONUS-FTP.md)                                 | Servidor FTP             |
 | [10-BONUS-ADMINER.md](10-BONUS-ADMINER.md)                         | Gerenciador de BD        |
-| [11-BONUS-SITE-ESTATICO.md](11-BONUS-SITE-ESTATICO.md)             | Portfolio estatico       |
+| [11-BONUS-SITE-ESTATICO.md](11-BONUS-SITE-ESTATICO.md)             | Portfólio estático       |
 | [12-BONUS-PORTAINER.md](12-BONUS-PORTAINER.md)                     | Gerenciador Docker       |
 | [13-VALIDACAO-TROUBLESHOOTING.md](13-VALIDACAO-TROUBLESHOOTING.md) | Testes e debug           |
 
@@ -432,8 +432,8 @@ Conforme solicitado pelo subject da 42, esta secao documenta o uso de IA generat
 
 **Boa sorte no projeto Inception!**
 
-Se tiver duvidas, consulte a documentacao oficial, pergunte aos colegas, ou utilize a IA como ferramenta de aprendizado (nao apenas para copiar codigo).
+Se tiver dúvidas, consulte a documentação oficial, pergunte aos colegas, ou utilize a IA como ferramenta de aprendizado (não apenas para copiar código).
 
 ---
 
-[Voltar ao Indice](00-INDICE.md) | [Anterior: Validacao](13-VALIDACAO-TROUBLESHOOTING.md)
+[Voltar ao Índice](00-INDICE.md) | [Anterior: Validação](13-VALIDACAO-TROUBLESHOOTING.md)

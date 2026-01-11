@@ -1,41 +1,41 @@
 # 12. Bonus: Portainer - Gerenciamento de Containers
 
-[Voltar ao Indice](00-INDICE.md) | [Anterior: Site Estatico](11-BONUS-SITE-ESTATICO.md) | [Proximo: Validacao](13-VALIDACAO-TROUBLESHOOTING.md)
+[Voltar ao Índice](00-INDICE.md) | [Anterior: Site Estático](11-BONUS-SITE-ESTATICO.md) | [Próximo: Validação](13-VALIDACAO-TROUBLESHOOTING.md)
 
 ---
 
-## Indice
+## Índice
 
-1. [Introducao](#1-introducao)
-2. [O que e o Portainer](#2-o-que-e-o-portainer)
+1. [Introdução](#1-introducao)
+2. [O que é o Portainer](#2-o-que-e-o-portainer)
 3. [Estrutura de Arquivos](#3-estrutura-de-arquivos)
 4. [Dockerfile](#4-dockerfile)
-5. [Script de Inicializacao](#5-script-de-inicializacao)
-6. [Configuracao NGINX](#6-configuracao-nginx)
+5. [Script de Inicialização](#5-script-de-inicializacao)
+6. [Configuração NGINX](#6-configuracao-nginx)
 7. [Docker Compose](#7-docker-compose)
 8. [Primeiro Acesso](#8-primeiro-acesso)
 9. [Funcionalidades](#9-funcionalidades)
-10. [Seguranca](#10-seguranca)
+10. [Segurança](#10-seguranca)
 11. [Troubleshooting](#11-troubleshooting)
 
 ---
 
-## 1. Introducao
+## 1. Introdução
 
-O Portainer e uma interface web para gerenciamento de containers Docker. Com ele, voce pode:
+O Portainer é uma interface web para gerenciamento de containers Docker. Com ele, você pode:
 
 - Visualizar todos os containers, imagens, volumes e redes
 - Iniciar, parar, reiniciar containers
 - Ver logs em tempo real
 - Acessar terminal dos containers
 - Gerenciar stacks Docker Compose
-- Monitorar recursos (CPU, memoria)
+- Monitorar recursos (CPU, memória)
 
-**Importante**: O subject permite "um servico de sua escolha que seja util". O Portainer e extremamente util para debugging e monitoramento durante o desenvolvimento e avaliacao.
+**Importante**: O subject permite "um serviço de sua escolha que seja útil". O Portainer é extremamente útil para debugging e monitoramento durante o desenvolvimento e avaliação.
 
 ---
 
-## 2. O que e o Portainer
+## 2. O que é o Portainer
 
 ### Arquitetura
 
@@ -59,9 +59,9 @@ O Portainer e uma interface web para gerenciamento de containers Docker. Com ele
               +-----------+ +-----------+ +-------------+
 ```
 
-### Por que Construir Nossa Propria Imagem?
+### Por que Construir Nossa Própria Imagem?
 
-O subject proibe usar imagens prontas do DockerHub. Precisamos construir o Portainer a partir de uma base Debian, baixando o binario oficial.
+O subject proíbe usar imagens prontas do DockerHub. Precisamos construir o Portainer a partir de uma base Debian, baixando o binário oficial.
 
 ---
 
@@ -122,7 +122,7 @@ ENTRYPOINT ["/usr/local/bin/setup.sh"]
 
 ---
 
-## 5. Script de Inicializacao
+## 5. Script de Inicialização
 
 ```bash
 #!/bin/sh
@@ -159,9 +159,9 @@ exec /opt/portainer/portainer \
 
 ---
 
-## 6. Configuracao NGINX
+## 6. Configuração NGINX
 
-O Portainer sera acessado via subdominio `portainer.peda-cos.42.fr`. Precisamos configurar o NGINX como proxy reverso.
+O Portainer será acessado via subdomínio `portainer.peda-cos.42.fr`. Precisamos configurar o NGINX como proxy reverso.
 
 ### Adicionar ao NGINX
 
@@ -261,10 +261,10 @@ volumes:
       device: /home/peda-cos/data/portainer
 ```
 
-### Criar Diretorio de Dados
+### Criar Diretório de Dados
 
 ```bash
-# Criar diretorio para dados do Portainer
+# Criar diretório para dados do Portainer
 mkdir -p /home/peda-cos/data/portainer
 ```
 
@@ -288,19 +288,19 @@ mkdir -p /home/peda-cos/data/portainer
 
 3. Aceitar certificado autoassinado
 
-### Configuracao Inicial
+### Configuração Inicial
 
-No primeiro acesso, voce devera:
+No primeiro acesso, você deverá:
 
-1. **Criar usuario administrador**:
-   - Username: `admin` (ou outro de sua preferencia)
-   - Password: senha forte (minimo 12 caracteres)
+1. **Criar usuário administrador**:
+   - Username: `admin` (ou outro de sua preferência)
+   - Password: senha forte (mínimo 12 caracteres)
 
 2. **Conectar ao Docker local**:
    - Selecionar "Docker" como ambiente
    - Clicar em "Connect"
 
-3. **Pronto!** Voce vera o dashboard com todos os containers
+3. **Pronto!** Você verá o dashboard com todos os containers
 
 ### Tela de Primeiro Acesso
 
@@ -346,22 +346,22 @@ No primeiro acesso, voce devera:
 
 ### Gerenciamento de Containers
 
-| Acao       | Descricao                        |
+| Ação       | Descrição                        |
 | ---------- | -------------------------------- |
 | Start/Stop | Iniciar ou parar container       |
 | Restart    | Reiniciar container              |
-| Kill       | Forcar parada imediata           |
+| Kill       | Forçar parada imediata           |
 | Remove     | Remover container                |
 | Logs       | Ver logs em tempo real           |
 | Console    | Terminal interativo no container |
-| Inspect    | Ver configuracoes detalhadas     |
-| Stats      | Monitorar CPU/Memoria/Rede       |
+| Inspect    | Ver configurações detalhadas     |
+| Stats      | Monitorar CPU/Memória/Rede       |
 
 ### Visualizar Logs
 
 1. Clicar no container desejado
 2. Clicar em "Logs"
-3. Configurar opcoes:
+3. Configurar opções:
    - Auto-refresh: atualizar automaticamente
    - Timestamps: mostrar data/hora
    - Wrap lines: quebrar linhas longas
@@ -372,14 +372,14 @@ No primeiro acesso, voce devera:
 2. Clicar em "Console"
 3. Selecionar shell:
    - `/bin/sh` (Alpine/Debian minimal)
-   - `/bin/bash` (se disponivel)
+   - `/bin/bash` (se disponível)
 4. Clicar em "Connect"
 
 ---
 
-## 10. Seguranca
+## 10. Segurança
 
-### Boas Praticas
+### Boas Práticas
 
 1. **Senha Forte**: Use senha com 12+ caracteres
 2. **Acesso Restrito**: Apenas via HTTPS
@@ -388,25 +388,25 @@ No primeiro acesso, voce devera:
 
 ### Riscos do Docker Socket
 
-**ATENCAO**: Acesso ao Docker socket equivale a acesso root na maquina host!
+**ATENÇÃO**: Acesso ao Docker socket equivale a acesso root na máquina host!
 
 ```yaml
-# Montagem read-only para seguranca
+# Montagem read-only para segurança
 volumes:
   - /var/run/docker.sock:/var/run/docker.sock:ro
 ```
 
-Mesmo com `:ro`, ainda e possivel:
+Mesmo com `:ro`, ainda é possível:
 
 - Ver todos os containers
-- Ver variaveis de ambiente (possiveis senhas!)
+- Ver variáveis de ambiente (possíveis senhas!)
 - Ver volumes montados
 
-**Recomendacao**: Em producao, considere:
+**Recomendação**: Em produção, considere:
 
 - Usar Portainer Agent
 - Restringir acesso por IP
-- Implementar autenticacao adicional
+- Implementar autenticação adicional
 
 ### Restringir Acesso por IP (Opcional)
 
@@ -421,7 +421,7 @@ location / {
     deny all;
 
     proxy_pass http://portainer:9000;
-    # ... resto da configuracao
+    # ... resto da configuração
 }
 ```
 
@@ -429,7 +429,7 @@ location / {
 
 ## 11. Troubleshooting
 
-### Container nao inicia
+### Container não inicia
 
 ```bash
 # Verificar logs
@@ -438,7 +438,7 @@ docker logs portainer
 # Verificar se o socket existe
 ls -la /var/run/docker.sock
 
-# Verificar permissoes
+# Verificar permissões
 docker exec portainer ls -la /var/run/docker.sock
 ```
 
@@ -449,17 +449,17 @@ docker exec portainer ls -la /var/run/docker.sock
 ls -la /var/run/docker.sock
 # srw-rw---- 1 root docker ...
 
-# Se necessario, ajustar no Dockerfile
-# (adicionar usuario ao grupo docker)
+# Se necessário, ajustar no Dockerfile
+# (adicionar usuário ao grupo docker)
 ```
 
-### Nao consegue acessar via HTTPS
+### Não consegue acessar via HTTPS
 
 ```bash
-# Verificar se NGINX esta com a configuracao
+# Verificar se NGINX está com a configuração
 docker exec nginx nginx -t
 
-# Verificar se Portainer esta respondendo
+# Verificar se Portainer está respondendo
 docker exec nginx curl -s http://portainer:9000/api/status
 
 # Verificar DNS
@@ -474,37 +474,37 @@ Se esquecer a senha:
 # Parar container
 docker stop portainer
 
-# Remover volume de dados (PERDERA CONFIGURACOES!)
+# Remover volume de dados (PERDERÁ CONFIGURAÇÕES!)
 docker volume rm inception_portainer_data
 
-# Recriar diretorio
+# Recriar diretório
 mkdir -p /home/peda-cos/data/portainer
 
 # Reiniciar
 docker start portainer
 ```
 
-### WebSocket nao funciona (terminal)
+### WebSocket não funciona (terminal)
 
 ```bash
-# Verificar se proxy WebSocket esta configurado
+# Verificar se proxy WebSocket está configurado
 # O NGINX deve ter:
 # proxy_set_header Upgrade $http_upgrade;
 # proxy_set_header Connection "upgrade";
 
-# Testar conexao direta
+# Testar conexão direta
 docker exec -it wordpress sh
 ```
 
 ---
 
-## Comandos Uteis
+## Comandos Úteis
 
 ```bash
 # Status do Portainer
 docker exec portainer curl -s http://localhost:9000/api/status | jq
 
-# Verificar versao
+# Verificar versão
 docker exec portainer /opt/portainer/portainer --version
 
 # Logs em tempo real
@@ -513,22 +513,22 @@ docker logs -f portainer
 # Inspecionar container
 docker inspect portainer
 
-# Estatisticas de recursos
+# Estatísticas de recursos
 docker stats portainer
 ```
 
 ---
 
-## Checklist de Verificacao
+## Checklist de Verificação
 
-- [ ] Dockerfile construido a partir de Debian (nao usa imagem pronta)
-- [ ] Binario baixado dos releases oficiais
+- [ ] Dockerfile construído a partir de Debian (não usa imagem pronta)
+- [ ] Binário baixado dos releases oficiais
 - [ ] Container inicia sem erros
-- [ ] Interface acessivel via HTTPS
-- [ ] Usuario admin criado com sucesso
+- [ ] Interface acessível via HTTPS
+- [ ] Usuário admin criado com sucesso
 - [ ] Consegue ver todos os containers do projeto
-- [ ] Funcao de logs funciona
-- [ ] Funcao de terminal funciona
+- [ ] Função de logs funciona
+- [ ] Função de terminal funciona
 - [ ] Healthcheck passando
 
 ---
@@ -537,13 +537,13 @@ docker stats portainer
 
 | Item               | Valor                            |
 | ------------------ | -------------------------------- |
-| **Servico**        | Portainer CE                     |
+| **Serviço**        | Portainer CE                     |
 | **Porta interna**  | 9000                             |
 | **Acesso**         | https://portainer.peda-cos.42.fr |
 | **Volume**         | /home/peda-cos/data/portainer    |
-| **Dependencia**    | Docker socket                    |
-| **Usuario padrao** | Criado no primeiro acesso        |
+| **Dependência**    | Docker socket                    |
+| **Usuário padrão** | Criado no primeiro acesso        |
 
 ---
 
-[Voltar ao Indice](00-INDICE.md) | [Anterior: Site Estatico](11-BONUS-SITE-ESTATICO.md) | [Proximo: Validacao](13-VALIDACAO-TROUBLESHOOTING.md)
+[Voltar ao Índice](00-INDICE.md) | [Anterior: Site Estático](11-BONUS-SITE-ESTATICO.md) | [Próximo: Validação](13-VALIDACAO-TROUBLESHOOTING.md)
