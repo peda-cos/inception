@@ -279,8 +279,6 @@ Docker Compose é uma ferramenta para definir e executar aplicações multi-cont
 ### Estrutura Básica do docker-compose.yml
 
 ```yaml
-version: "3.8"
-
 services:
   nginx:
     build: ./requirements/nginx
