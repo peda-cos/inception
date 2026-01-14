@@ -34,9 +34,9 @@ O servidor FTP permite:
         │ Port 21 + Passive Ports
         ▼
 ┌───────────────────────────────────────┐
-│               vsftpd                   │
-│                                        │
-│   /var/www/html (volume WordPress)     │
+│               vsftpd                  │
+│                                       │
+│   /var/www/html (volume WordPress)    │
 └───────────────────────────────────────┘
 ```
 
