@@ -544,6 +544,21 @@ http {
                   <span class="workload">25h</span>
                 </div>
               </article>
+              <article class="project-card">
+                <div class="project-header">
+                  <h4>CPP Module 08</h4>
+                  <span class="project-grade">100</span>
+                </div>
+                <p>
+                  Uso de containers, iteradores e algoritmos no estilo STL com
+                  templates em C++.
+                </p>
+                <div class="project-meta">
+                  <span class="tag">C++</span>
+                  <span class="tag">STL</span>
+                  <span class="workload">25h</span>
+                </div>
+              </article>
             </div>
           </div>
         </div>
