@@ -93,7 +93,7 @@ LABEL maintainer="peda-cos@student.42sp.org.br"
 LABEL description="Portainer CE for Docker management - 42 Inception"
 LABEL version="1.0"
 
-ARG PORTAINER_VERSION=2.21.0
+ARG PORTAINER_VERSION=2.33.6
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
