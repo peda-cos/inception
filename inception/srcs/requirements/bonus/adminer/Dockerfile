@@ -1,6 +1,14 @@
 FROM debian:oldstable
 
-RUN apt-get update && apt-get install -y --no-install-recommends php8.2-fpm php8.2-mysql php8.2-mbstring curl ca-certificates procps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    php8.2-cli \
+    php8.2-fpm \
+    php8.2-mysql \
+    php8.2-mbstring \
+    curl \
+    ca-certificates \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/www/html && mkdir -p /run/php
 
@@ -16,5 +24,4 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 CMD pgrep php-fpm > /dev/null || exit 1
 
-CMD ["php-fpm8.2", "-F"]
 CMD ["php", "-S", "0.0.0.0:8080", "-t", "/var/www/html"]

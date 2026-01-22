@@ -24,11 +24,13 @@ ADMIN_PASSWORD=$(read_credentials "WORDPRESS_ADMIN_PASSWORD")
 USER_PASSWORD=$(read_credentials "WORDPRESS_USER_PASSWORD")
 
 if [ -z "$ADMIN_PASSWORD" ]; then
-    ADMIN_PASSWORD="ChangeMe123!"
+    echo "[ERROR] WORDPRESS_ADMIN_PASSWORD nao definido"
+    exit 1
 fi
 
 if [ -z "$USER_PASSWORD" ]; then
-    USER_PASSWORD="ChangeMe456!"
+    echo "[ERROR] WORDPRESS_USER_PASSWORD nao definido"
+    exit 1
 fi
 
 if [ -z "$WORDPRESS_DB_HOST" ]; then
