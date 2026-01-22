@@ -1,0 +1,14 @@
+.git
+.gitignore
+*.md
+README*
+LICENSE
+*.log
+logs/
+*.tmp
+*.swp
+*~
+*.pem
+*.key
+*.crt
+!conf/*.conf

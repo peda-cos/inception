@@ -1,0 +1,12 @@
+.git
+.gitignore
+*.md
+README*
+LICENSE
+*.log
+*.tmp
+*.swp
+*~
+node_modules/
+wp-content/uploads/
+wp-content/cache/
