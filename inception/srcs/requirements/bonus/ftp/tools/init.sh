@@ -3,7 +3,7 @@ set -e
 
 read_secret() {
 	local secret_file="$1"
-	if [ -f "$secret_file"]; then
+	if [ -f "$secret_file" ]; then
 		cat "$secret_file" | tr -d '\n'
 	else
 		echo ""
@@ -13,6 +13,11 @@ read_secret() {
 FTP_PASSWORD=$(read_secret "/run/secrets/ftp_password")
 
 FTP_USER="${FTP_USER:-ftpuser}"
+
+if [ -z "$FTP_PASSWORD" ]; then
+	echo "[ERROR] FTP_PASSWORD nao definido"
+	exit 1
+fi
 
 echo "[INFO] Configurando usuario FTP: $FTP_USER"
 
@@ -31,7 +36,7 @@ mkdir -p /var/log/vsftpd
 touch /var/log/vsftpd/vsftpd.log
 
 if [ -n "$DOMAIN_NAME" ]; then
-	sed -i "s/pasv_address=.*/pasv_address=$DOMAIN_NAME/" /etc/vsftpd.co
+	sed -i "s/pasv_address=.*/pasv_address=$DOMAIN_NAME/" /etc/vsftpd.conf
 fi
 
 echo "[INFO] Iniciando vsftpd..."

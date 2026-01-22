@@ -152,7 +152,7 @@ services:
     depends_on:
       - mariadb
     healthcheck:
-      test: ["CMD", "pgrep", "php-fpm"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -181,7 +181,10 @@ services:
       context: ./requirements/bonus/portainer
       dockerfile: Dockerfile
     container_name: portainer
+    image: portainer
     restart: unless-stopped
+    ports:
+      - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - portainer_data:/data
