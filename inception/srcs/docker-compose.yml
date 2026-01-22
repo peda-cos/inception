@@ -1,0 +1,236 @@
+services:
+  mariadb:
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    container_name: mariadb
+    image: mariadb
+    restart: unless-stopped
+    networks:
+      - inception
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_password
+      - db_root_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    container_name: wordpress
+    image: wordpress
+    restart: unless-stopped
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - WORDPRESS_DB_HOST=${WORDPRESS_DB_HOST}
+      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
+      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
+      - WORDPRESS_TITLE=${WORDPRESS_TITLE}
+      - WORDPRESS_ADMIN_USER=${WORDPRESS_ADMIN_USER}
+      - WORDPRESS_ADMIN_EMAIL=${WORDPRESS_ADMIN_EMAIL}
+      - WORDPRESS_USER=${WORDPRESS_USER}
+      - WORDPRESS_USER_EMAIL=${WORDPRESS_USER_EMAIL}
+      - WORDPRESS_USER_ROLE=${WORDPRESS_USER_ROLE}
+      - REDIS_HOST=${REDIS_HOST:-}
+      - REDIS_PORT=${REDIS_PORT:-}
+    secrets:
+      - db_password
+      - credentials
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pgrep", "php-fpm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  nginx:
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    image: nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html:ro
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - REDIS_HOST=${REDIS_HOST:-}
+      - REDIS_PORT=${REDIS_PORT:-}
+    depends_on:
+      wordpress:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    build:
+      context: ./requirements/bonus/redis
+      dockerfile: Dockerfile
+    container_name: redis
+    image: redis
+    restart: unless-stopped
+    networks:
+      - inception
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  ftp:
+    build:
+      context: ./requirements/bonus/ftp
+      dockerfile: Dockerfile
+    container_name: ftp
+    image: ftp
+    restart: unless-stopped
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html
+    environment:
+      - FTP_USER=${FTP_USER:-ftpuser}
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    secrets:
+      - ftp_password
+    depends_on:
+      - wordpress
+    healthcheck:
+      test: ["CMD", "pgrep", "vsftpd"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  adminer:
+    build:
+      context: ./requirements/bonus/adminer
+      dockerfile: Dockerfile
+    container_name: adminer
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+    healthcheck:
+      test: ["CMD", "pgrep", "php-fpm"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  static-site:
+    build:
+      context: ./requirements/bonus/static-site
+      dockerfile: Dockerfile
+    container_name: static-site
+    image: static-site
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    networks:
+      - inception
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  portainer:
+    build:
+      context: ./requirements/bonus/portainer
+      dockerfile: Dockerfile
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    networks:
+      - inception
+    depends_on:
+      - nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  inception:
+    name: inception
+    driver: bridge
+
+volumes:
+  wordpress_data:
+    name: wordpress_data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/peda-cos/data/wordpress
+
+  db_data:
+    name: db_data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/peda-cos/data/mariadb
+
+  portainer_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/peda-cos/data/portainer
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  credentials:
+    file: ../secrets/credentials.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
