@@ -1,5 +1,5 @@
 COMPOSE = docker compose -f srcs/docker-compose.yml
-DATA_PATH = /home/peda-cos/data
+DATA_PATH = /home/login/data
 
 all:
 	@mkdir -p $(DATA_PATH)/wordpress

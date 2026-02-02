@@ -1,22 +1,21 @@
 #!/bin/sh
-# srcs/requirements/bonus/portainer/tools/setup.sh
 
 set -e
 
 if [ ! -f /opt/portainer/portainer ]; then
-	echo "[ERRO] Binario do Portainer nao encontrado!"
+	echo "[ERROR] Portainer binary not found!"
 	exit 1
 fi
 
-echo "[INFO] Portainer binario encontrado"
-echo "[INFO] Dados armazenados em: /data"
+echo "[INFO] Portainer binary found"
+echo "[INFO] Data stored in: /data"
 
 if [ -S /var/run/docker.sock ]; then
-	echo "[INFO] Docker socket disponivel"
+	echo "[INFO] Docker socket available"
 else
-	echo "[AVISO] Docker socket nao encontrado - funcionalidade limitada"
+	echo "[WARN] Docker socket not found - limited functionality"
 fi
 
-echo "[INFO] Iniciando Portainer na porta 9000..."
+echo "[INFO] Starting Portainer on port 9000..."
 
 exec /opt/portainer/portainer --bind=":9000" --data=/data --no-analytics

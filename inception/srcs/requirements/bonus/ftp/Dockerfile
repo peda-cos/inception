@@ -7,8 +7,6 @@ RUN mkdir -p /var/run/vsftpd/empty && mkdir -p /var/log/vsftpd && mkdir -p /etc/
 COPY conf/vsftpd.conf /etc/vsftpd.conf
 
 COPY tools/init.sh /usr/local/bin/init.sh
-
-COPY tools/init.sh /usr/local/bin/init.sh
 RUN chmod +x /usr/local/bin/init.sh
 
 EXPOSE 21

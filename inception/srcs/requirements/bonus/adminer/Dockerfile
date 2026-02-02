@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN mkdir -p /var/www/html && mkdir -p /run/php
 
-RUN curl -L https://github.com/vrana/adminer/releases/download/v5.4.1/adminer-5.4.1.php -o /var/www/html/index.php
+RUN curl -L https://github.com/vrana/adminer/releases/download/v5.4.0/adminer-5.4.0.php -o /var/www/html/index.php
 
-RUN curl -L https://github.com/vrana/adminer/blob/master/designs/nette/adminer.css -o /var/www/html/adminer.css
+RUN curl -L https://raw.githubusercontent.com/vrana/adminer/master/designs/nette/adminer.css -o /var/www/html/adminer.css
 
 COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 

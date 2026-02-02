@@ -14,36 +14,36 @@ MYSQL_ROOT_PASSWORD=$(read_secret "${MYSQL_ROOT_PASSWORD_FILE}")
 MYSQL_PASSWORD=$(read_secret "${MYSQL_PASSWORD_FILE}")
 
 if [ -z "$MYSQL_ROOT_PASSWORD" ]; then
-    echo "[ERROR] MYSQL_ROOT_PASSWORD não definido"
+    echo "[ERROR] MYSQL_ROOT_PASSWORD not defined"
     exit 1
 fi
 
 if [ -z "$MYSQL_DATABASE" ]; then
-    echo "[ERROR] MYSQL_DATABASE não definido"
+    echo "[ERROR] MYSQL_DATABASE not defined"
     exit 1
 fi
 
 if [ -z "$MYSQL_USER" ]; then
-    echo "[ERROR] MYSQL_USER não definido"
+    echo "[ERROR] MYSQL_USER not defined"
     exit 1
 fi
 
 if [ -z "$MYSQL_PASSWORD" ]; then
-    echo "[ERROR] MYSQL_PASSWORD não definido"
+    echo "[ERROR] MYSQL_PASSWORD not defined"
     exit 1
 fi
 
 init_database() {
-    echo "[INFO] Inicializando banco de dados..."
+    echo "[INFO] Initializing database..."
 
     mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null 2>&1
 
-    echo "[INFO] Iniciando MariaDB temporariamente..."
+    echo "[INFO] Starting MariaDB temporarily..."
 
     mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
     pid="$!"
 
-    echo "[INFO] Aguardando MariaDB iniciar..."
+    echo "[INFO] Waiting for MariaDB to start..."
     for i in $(seq 1 30); do
         if mysqladmin ping --silent 2>/dev/null; then
             break
@@ -52,11 +52,11 @@ init_database() {
     done
 
     if ! mysqladmin ping --silent 2>/dev/null; then
-        echo "[ERROR] MariaDB não iniciou corretamente"
+        echo "[ERROR] MariaDB did not start correctly"
         exit 1
     fi
 
-    echo "[INFO] Configurando banco de dados..."
+    echo "[INFO] Configuring database..."
 
     cat << EOF > /tmp/init.sql
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
@@ -74,7 +74,7 @@ EOF
 
     rm -f /tmp/init.sql
 
-    echo "[INFO] Banco de dados configurado com sucesso"
+    echo "[INFO] Database configured successfully"
     echo "[INFO] - Database: ${MYSQL_DATABASE}"
     echo "[INFO] - User: ${MYSQL_USER}"
 
@@ -82,11 +82,11 @@ EOF
 
     wait "$pid"
 
-    echo "[INFO] Inicialização concluída"
+    echo "[INFO] Initialization completed"
 }
 
 setup_database_if_needed() {
-    echo "[INFO] Verificando se database ${MYSQL_DATABASE} existe..."
+    echo "[INFO] Checking if database ${MYSQL_DATABASE} exists..."
 
     mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
     pid="$!"
@@ -99,12 +99,12 @@ setup_database_if_needed() {
     done
 
     if ! mysqladmin ping --silent 2>/dev/null; then
-        echo "[ERROR] MariaDB não iniciou corretamente"
+        echo "[ERROR] MariaDB did not start correctly"
         exit 1
     fi
 
     if ! mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "USE ${MYSQL_DATABASE}" 2>/dev/null; then
-        echo "[INFO] Database ${MYSQL_DATABASE} não existe, criando..."
+        echo "[INFO] Database ${MYSQL_DATABASE} does not exist, creating..."
 
         cat << EOF > /tmp/setup.sql
 CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -119,9 +119,9 @@ EOF
         mysql -u root -p"${MYSQL_ROOT_PASSWORD}" < /tmp/setup.sql
         rm -f /tmp/setup.sql
 
-        echo "[INFO] Database ${MYSQL_DATABASE} criada com sucesso"
+        echo "[INFO] Database ${MYSQL_DATABASE} created successfully"
     else
-        echo "[INFO] Database ${MYSQL_DATABASE} já existe"
+        echo "[INFO] Database ${MYSQL_DATABASE} already exists"
     fi
 
     mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
@@ -129,14 +129,13 @@ EOF
 }
 
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "[INFO] Primeira inicialização detectada"
+    echo "[INFO] First initialization detected"
     init_database
 else
-    echo "[INFO] MariaDB já inicializado, verificando database..."
+    echo "[INFO] MariaDB already initialized, checking database..."
     setup_database_if_needed
 fi
 
-echo "[INFO] Iniciando MariaDB..."
+echo "[INFO] Starting MariaDB..."
 
-# exec replaces shell with mysqld, making it PID 1 for proper signal handling
 exec mysqld --user=mysql --datadir=/var/lib/mysql

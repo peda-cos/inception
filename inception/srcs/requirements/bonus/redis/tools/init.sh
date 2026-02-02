@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "[INFO] Iniciando Redis..."
+echo "[INFO] Starting Redis..."
 
 chown -R redis:redis /var/lib/redis
 chown -R redis:redis /var/run/redis

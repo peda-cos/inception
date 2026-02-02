@@ -5,7 +5,7 @@ SSL_DIR="/etc/nginx/ssl"
 BASE_DOMAIN="${DOMAIN_NAME:-peda-cos.42.fr}"
 DAYS_VALID=365
 
-echo "[INFO] Gerando certificado SSL para: $BASE_DOMAIN"
+echo "[INFO] Generating SSL certificate for: $BASE_DOMAIN"
 
 mkdir -p "$SSL_DIR"
 
@@ -23,5 +23,5 @@ openssl dhparam -out "$SSL_DIR/dhparam.pem" 2048
 chmod 600 "$SSL_DIR/inception.key"
 chmod 644 "$SSL_DIR/inception.crt"
 
-echo "[INFO] Certificados gerados em $SSL_DIR"
+echo "[INFO] Certificates generated in $SSL_DIR"
 ls -la "$SSL_DIR"
