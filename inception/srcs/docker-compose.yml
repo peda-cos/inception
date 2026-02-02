@@ -230,10 +230,10 @@ volumes:
 
 secrets:
   db_password:
-    file: ../secrets/db_password.txt
+    file: /home/peda-cos/secrets/db_password.txt
   db_root_password:
-    file: ../secrets/db_root_password.txt
+    file: /home/peda-cos/secrets/db_root_password.txt
   credentials:
-    file: ../secrets/credentials.txt
+    file: /home/peda-cos/secrets/credentials.txt
   ftp_password:
-    file: ../secrets/ftp_password.txt
+    file: /home/peda-cos/secrets/ftp_password.txt
