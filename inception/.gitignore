@@ -1,6 +1,9 @@
 # NEVER commit real secrets!
-secrets/*.txt
-secrets/*.env
+# Exclude entire secrets directory and all .env files
+secrets/
+.env
+srcs/.env
+*.env
 
 /home/*/data/
 
