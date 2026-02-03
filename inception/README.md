@@ -118,7 +118,7 @@ wordpress -> mariadb:3306  # Instead of IP addresses
 - `9000` → WordPress PHP-FPM
 - `6379` → Redis
 - `8080` → Adminer (proxied via NGINX)
-- `80` → Static Site (proxied via NGINX)
+- `8081` → Static Site (proxied via NGINX)
 - `21`, `21100-21110` → FTP
 
 ## Volume Architecture
