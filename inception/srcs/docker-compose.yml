@@ -4,7 +4,7 @@ services:
       context: ./requirements/mariadb
       dockerfile: Dockerfile
     container_name: mariadb
-    image: mariadb
+    image: mariadb:inception
     restart: unless-stopped
     networks:
       - inception
@@ -30,7 +30,7 @@ services:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
     container_name: wordpress
-    image: wordpress
+    image: wordpress:inception
     restart: unless-stopped
     networks:
       - inception
@@ -70,7 +70,7 @@ services:
       context: ./requirements/nginx
       dockerfile: Dockerfile
     container_name: nginx
-    image: nginx
+    image: nginx:inception
     restart: unless-stopped
     ports:
       - "443:443"
@@ -99,7 +99,7 @@ services:
       context: ./requirements/bonus/redis
       dockerfile: Dockerfile
     container_name: redis
-    image: redis
+    image: redis:inception
     restart: unless-stopped
     networks:
       - inception
@@ -115,7 +115,7 @@ services:
       context: ./requirements/bonus/ftp
       dockerfile: Dockerfile
     container_name: ftp
-    image: ftp
+    image: ftp:inception
     restart: unless-stopped
     ports:
       - "21:21"
@@ -143,10 +143,8 @@ services:
       context: ./requirements/bonus/adminer
       dockerfile: Dockerfile
     container_name: adminer
-    image: adminer
+    image: adminer:inception
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     networks:
       - inception
     depends_on:
@@ -163,10 +161,8 @@ services:
       context: ./requirements/bonus/static-site
       dockerfile: Dockerfile
     container_name: static-site
-    image: static-site
+    image: static-site:inception
     restart: unless-stopped
-    ports:
-      - "8081:8081"
     networks:
       - inception
     healthcheck:
@@ -181,7 +177,7 @@ services:
       context: ./requirements/bonus/portainer
       dockerfile: Dockerfile
     container_name: portainer
-    image: portainer
+    image: portainer:inception
     restart: unless-stopped
     ports:
       - "9000:9000"

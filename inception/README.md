@@ -1,6 +1,84 @@
+*This project has been created as part of the 42 curriculum by peda-cos*
+
 # Inception - Docker Infrastructure Project
 
 42 School project implementing a complete multi-container infrastructure using Docker and Docker Compose.
+
+## Project Description
+
+### Virtual Machines vs Docker
+
+**Virtual Machines (VMs)**:
+- Complete guest operating system with dedicated kernel
+- Hardware-level virtualization via hypervisor
+- High resource overhead (GBs of RAM, full OS install)
+- Strong isolation but heavy performance cost
+- Slow boot times (minutes)
+- Each VM requires full OS maintenance
+
+**Docker Containers**:
+- Share host OS kernel (OS-level virtualization)
+- Lightweight process isolation via namespaces and cgroups
+- Minimal overhead (MBs of RAM, no full OS)
+- Near-native performance
+- Fast startup (seconds)
+- Shared kernel reduces maintenance burden
+
+**Why Docker for this project**: Faster development cycles, efficient resource usage, consistent environments across development and production.
+
+### Secrets vs Environment Variables
+
+**Environment Variables**:
+- Stored in `.env` file and passed to containers at runtime
+- Visible in `docker inspect`, logs, and process listings
+- Suitable for non-sensitive configuration (ports, hostnames, usernames)
+- Easy to debug and inspect
+- Can leak through error messages and logs
+
+**Docker Secrets**:
+- Mounted as files in `/run/secrets/` directory
+- Never appear in environment or process listings
+- Suitable for sensitive data (passwords, API keys, tokens)
+- Read-only access, removed when container stops
+- Protected from accidental logging
+
+**Implementation**: This project uses Docker secrets for all passwords (database, FTP, admin credentials) and environment variables for configuration values.
+
+### Docker Network vs Host Network
+
+**Host Network**:
+- Containers share the host's network stack
+- No network isolation between containers
+- Direct access to host's network interfaces
+- Port conflicts possible if multiple services use same port
+- Faster network performance (no bridge overhead)
+
+**Docker Bridge Network**:
+- Isolated virtual network for containers
+- DNS-based service discovery (containers resolve by name)
+- Port mapping required for external access
+- Complete network isolation from host
+- Additional network hop (slight performance cost)
+
+**Implementation**: This project uses a custom bridge network `inception` for service isolation and DNS-based discovery. Only NGINX exposes ports to the host (443).
+
+### Docker Volumes vs Bind Mounts
+
+**Bind Mounts**:
+- Direct mapping of host directory to container path
+- Host filesystem changes immediately visible in container
+- Depends on host directory structure
+- No Docker management (manual backup/restore)
+- Can use any host path
+
+**Docker Volumes**:
+- Managed by Docker in `/var/lib/docker/volumes/`
+- Portable across systems (no host path dependency)
+- Docker handles backup, restore, and migration
+- Can be shared between multiple containers
+- Better isolation from host filesystem
+
+**Implementation**: This project uses named volumes with bind mount driver options to store data at `/home/peda-cos/data/` for easy backup while maintaining Docker volume semantics.
 
 ## Architecture Overview
 
@@ -239,10 +317,22 @@ inception/
 - ✅ Dockerfiles in dedicated folders
 - ✅ One service per container
 
-## References
+## Resources
+
+### References
 
 - [Docker Documentation](https://docs.docker.com/)
 - [Docker Compose Specification](https://docs.docker.com/compose/compose-file/)
 - [NGINX Documentation](https://nginx.org/en/docs/)
 - [MariaDB Documentation](https://mariadb.com/kb/en/)
 - [WordPress Codex](https://codex.wordpress.org/)
+
+### AI Usage
+
+This project was developed with assistance from AI tools (Claude Code) for:
+- Code review and debugging
+- Configuration file generation (Docker, NGINX, PHP-FPM)
+- Documentation structure and content
+- Troubleshooting container networking issues
+
+All code was written and tested by the project author. AI assistance was used as a productivity tool to accelerate development and ensure best practices.

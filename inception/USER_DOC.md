@@ -111,34 +111,36 @@ ftp peda-cos.42.fr
 
 ### Start Infrastructure
 
-```bash
-make up
-```
-
-Or to rebuild images:
+To build and start all services:
 
 ```bash
 make
 ```
 
+This will build images if needed and start all containers.
+
 ### Stop Infrastructure
 
+To stop all containers:
+
 ```bash
-make down
+make clean
 ```
 
 Containers stop but data persists in volumes.
 
 ### View Logs
 
+To view service logs:
+
 ```bash
 # All services
-make logs
+docker compose -f srcs/docker-compose.yml logs -f
 
 # Specific service
-docker compose -f srcs/docker-compose.yml logs nginx
-docker compose -f srcs/docker-compose.yml logs wordpress
-docker compose -f srcs/docker-compose.yml logs mariadb
+docker compose -f srcs/docker-compose.yml logs -f nginx
+docker compose -f srcs/docker-compose.yml logs -f wordpress
+docker compose -f srcs/docker-compose.yml logs -f mariadb
 ```
 
 ### Check Service Status
@@ -202,12 +204,14 @@ make
 
 ### Service Won't Start
 
-```bash
-# Check logs
-make logs
+Check logs:
 
-# Check specific service
-docker compose -f srcs/docker-compose.yml logs [service-name]
+```bash
+# All services
+docker compose -f srcs/docker-compose.yml logs -f
+
+# Specific service
+docker compose -f srcs/docker-compose.yml logs -f [service-name]
 ```
 
 ### Can't Access Website
@@ -320,7 +324,7 @@ Check "Status" column - should show "healthy" for all services.
 
 For issues:
 
-1. Check logs: `make logs`
+1. Check logs: `docker compose -f srcs/docker-compose.yml logs -f`
 2. Verify all containers healthy: `docker compose -f srcs/docker-compose.yml ps`
 3. Review troubleshooting section above
 4. Check DEV_DOC.md for development-specific issues

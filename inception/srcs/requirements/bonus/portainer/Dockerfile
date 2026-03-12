@@ -1,4 +1,4 @@
-FROM debian:oldstable
+FROM debian:bookworm
 
 LABEL maintainer="peda-cos@student.42sp.org.br"
 LABEL description="Portainer CE for Docker management - 42 Inception"

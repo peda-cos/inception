@@ -1,4 +1,4 @@
-COMPOSE = docker compose -f srcs/docker-compose.yml --env-file /home/peda-cos/secrets/.env
+COMPOSE = docker compose -f srcs/docker-compose.yml --env-file srcs/.env
 DATA_PATH = /home/peda-cos/data
 
 all:
