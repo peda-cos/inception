@@ -1,422 +1,330 @@
-# Documentação do Usuário - Inception
+# User Documentation - Inception Project
 
-Guia de uso do sistema para usuários finais.
+Complete guide for using and accessing the Inception infrastructure.
 
----
+## Prerequisites
 
-## Índice
+- Linux or macOS system with Docker and Docker Compose installed
+- Administrative access (for editing `/etc/hosts`)
+- At least 4GB free RAM
+- 10GB free disk space
 
-1. [Introdução](#introdução)
-2. [Acessando o Sistema](#acessando-o-sistema)
-3. [WordPress](#wordpress)
-4. [Adminer](#adminer)
-5. [Portfólio](#portfólio)
-6. [Portainer](#portainer)
-7. [FTP](#ftp)
-8. [Solução de Problemas](#solução-de-problemas)
+## Initial Setup
 
----
+### 1. Configure Domain Resolution
 
-## Introdução
+Add the following line to your `/etc/hosts` file:
 
-O Inception é uma infraestrutura web composta por vários serviços. Este guia explica como acessar e utilizar cada um deles.
-
-### Serviços Disponíveis
-
-| Serviço   | URL                              | Descrição                     |
-| --------- | -------------------------------- | ----------------------------- |
-| WordPress | https://peda-cos.42.fr           | Blog/Site principal           |
-| Adminer   | https://adminer.peda-cos.42.fr   | Gerenciador de banco de dados |
-| Portfólio | https://static.peda-cos.42.fr    | Site estático de portfólio    |
-| Portainer | https://portainer.peda-cos.42.fr | Gerenciador de containers     |
-
----
-
-## Acessando o Sistema
-
-### Requisitos
-
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- Conexão com a rede onde o servidor está hospedado
-- Credenciais de acesso (fornecidas pelo administrador)
-
-### Certificado SSL
-
-O sistema utiliza certificados autoassinados. No primeiro acesso, você verá um aviso de segurança:
-
-1. Clique em **"Avançado"** ou **"Mostrar detalhes"**
-2. Clique em **"Continuar para o site"** ou **"Aceitar o risco"**
-3. O navegador lembrará sua escolha
-
-> **Nota:** Este aviso é normal para certificados autoassinados em ambiente de desenvolvimento.
-
----
-
-## WordPress
-
-### URL de Acesso
-
-```
-https://peda-cos.42.fr
+```bash
+sudo nano /etc/hosts
 ```
 
-### Login
-
-1. Acesse `https://peda-cos.42.fr/wp-admin`
-2. Insira seu usuário e senha
-3. Clique em "Entrar"
-
-### Painel Administrativo
-
-Após o login, você terá acesso ao painel:
+Add:
 
 ```
-+----------------------------------------------------------+
-|  Dashboard                                                |
-+----------------------------------------------------------+
-| Posts     | Todas as publicações do blog                 |
-| Mídia     | Biblioteca de imagens e arquivos             |
-| Páginas   | Páginas estáticas do site                    |
-| Aparência | Temas e personalização                       |
-| Plugins   | Extensões do WordPress                       |
-| Usuários  | Gerenciamento de usuários                    |
-| Config.   | Configurações gerais do site                 |
-+----------------------------------------------------------+
+127.0.0.1   peda-cos.42.fr www.peda-cos.42.fr adminer.peda-cos.42.fr static.peda-cos.42.fr portainer.peda-cos.42.fr
 ```
 
-### Criando uma Publicação
+### 2. Build and Start Services
 
-1. No menu lateral, clique em **"Posts"**
-2. Clique em **"Adicionar Novo"**
-3. Digite o título e conteúdo
-4. Clique em **"Publicar"**
+Navigate to project root and run:
 
-### Enviando Mídia
-
-1. No menu lateral, clique em **"Mídia"**
-2. Clique em **"Adicionar Nova"**
-3. Arraste arquivos ou clique para selecionar
-4. Aguarde o upload completar
-
-### Gerenciando Usuários
-
-> **Nota:** Apenas administradores podem gerenciar usuários.
-
-1. Vá em **"Usuários"** > **"Todos os Usuários"**
-2. Para adicionar: clique em **"Adicionar Novo"**
-3. Preencha os dados e selecione o papel (role)
-4. Clique em **"Adicionar Novo Usuário"**
-
-#### Papéis de Usuário
-
-| Papel         | Permissões                                 |
-| ------------- | ------------------------------------------ |
-| Administrador | Acesso total ao sistema                    |
-| Editor        | Pode publicar e editar todos os posts      |
-| Autor         | Pode publicar e editar seus próprios posts |
-| Colaborador   | Pode escrever, mas não publicar            |
-| Assinante     | Apenas visualizar conteúdo                 |
-
----
-
-## Adminer
-
-### URL de Acesso
-
-```
-https://adminer.peda-cos.42.fr
+```bash
+make
 ```
 
-### Login
+This will:
 
-1. Acesse o Adminer
-2. Preencha os campos:
-   - **Sistema:** MySQL
-   - **Servidor:** mariadb
-   - **Usuário:** (fornecido pelo admin)
-   - **Senha:** (fornecida pelo admin)
-   - **Base de dados:** wordpress
+1. Create necessary data directories
+2. Build all Docker images
+3. Start all containers
+4. Initialize databases and services
 
-3. Clique em **"Entrar"**
+**First build takes 5-10 minutes** depending on internet speed.
 
-### Navegação
+## Accessing Services
 
-```
-+----------------------------------------------------------+
-|  Adminer - wordpress                                      |
-+----------------------------------------------------------+
-| Banco de dados | Selecionar outro banco                   |
-| SQL            | Executar consultas SQL                   |
-| Exportar       | Fazer backup dos dados                   |
-| Importar       | Restaurar backup                         |
-| Tabelas        | Lista de tabelas do banco                |
-+----------------------------------------------------------+
-```
+Once started, services are available at:
 
-### Visualizando Dados
+### Primary Services
 
-1. Clique no nome da tabela desejada
-2. Você verá os dados em formato de tabela
-3. Use os filtros para buscar registros específicos
+**WordPress CMS**
 
-### Executando SQL
+- URL: `https://peda-cos.42.fr`
+- Admin Panel: `https://peda-cos.42.fr/wp-admin`
+- Admin User: `supervisor`
+- Admin Password: Check `secrets/credentials.txt` → `WORDPRESS_ADMIN_PASSWORD`
+- Editor User: `editor`
+- Editor Password: Check `secrets/credentials.txt` → `WORDPRESS_USER_PASSWORD`
 
-1. Clique em **"SQL"** no menu
-2. Digite sua consulta SQL
-3. Clique em **"Executar"**
+**Certificate Warning**: You'll see a browser security warning because we use self-signed certificates. Click "Advanced" → "Proceed to site" (safe for local development).
 
-**Exemplo:**
+### Bonus Services
 
-```sql
-SELECT * FROM wp_users;
-```
+**Adminer (Database Management)**
 
-### Fazendo Backup
+- URL: `https://adminer.peda-cos.42.fr`
+- System: `MySQL`
+- Server: `mariadb`
+- Username: `wpuser`
+- Password: Check `secrets/db_password.txt`
+- Database: `wordpress`
 
-1. Clique em **"Exportar"**
-2. Selecione as tabelas desejadas
-3. Escolha o formato (SQL recomendado)
-4. Clique em **"Exportar"**
-5. Salve o arquivo baixado
+**Static Portfolio Site**
 
-> **Importante:** Faça backups regulares dos seus dados!
+- URL: `https://static.peda-cos.42.fr`
+- No authentication required
 
----
+**Portainer (Docker Management)**
 
-## Portfólio
+- URL: `http://peda-cos.42.fr:9000`
+- First Visit: Create admin account
+- Then: Login with your credentials
 
-### URL de Acesso
+**FTP Server**
+
+- Host: `peda-cos.42.fr`
+- Port: `21`
+- User: `ftpuser`
+- Password: Check `secrets/ftp_password.txt`
+- Directory: `/var/www/html` (WordPress files)
+
+**FTP Client Example (FileZilla)**:
 
 ```
-https://static.peda-cos.42.fr
+Host: peda-cos.42.fr
+Port: 21
+Username: ftpuser
+Password: [from secrets/ftp_password.txt]
+Transfer Mode: Passive
 ```
 
-### Sobre
+**FTP Client Example (Command Line)**:
 
-O Portfólio é um site estático que apresenta informações sobre o desenvolvedor. Não requer login.
-
-### Navegação
-
-- **Sobre:** Informações pessoais e biografia
-- **Habilidades:** Tecnologias e competências
-- **Projetos:** Portfólio de trabalhos realizados
-- **Contato:** Formulário e informações de contato
-
-### Personalização
-
-Para alterar o conteúdo do portfólio, contate o desenvolvedor/administrador do sistema.
-
----
-
-## Portainer
-
-### URL de Acesso
-
-```
-https://portainer.peda-cos.42.fr
+```bash
+ftp peda-cos.42.fr
+# Enter username: ftpuser
+# Enter password: [from secrets/ftp_password.txt]
 ```
 
-### Primeiro Acesso
+## Common Operations
 
-No primeiro acesso, você deverá criar uma conta de administrador:
+### Start Infrastructure
 
-1. Acesse o Portainer
-2. Defina um usuário e senha (mínimo 12 caracteres)
-3. Clique em **"Create user"**
-4. Selecione **"Docker"** como ambiente
-5. Clique em **"Connect"**
+To build and start all services:
 
-### Dashboard
-
-```
-+----------------------------------------------------------+
-|  Portainer - Dashboard                                    |
-+----------------------------------------------------------+
-| Containers | Ver e gerenciar containers                  |
-| Images     | Imagens Docker disponíveis                  |
-| Volumes    | Volumes de dados                             |
-| Networks   | Redes Docker                                 |
-+----------------------------------------------------------+
+```bash
+make
 ```
 
-### Gerenciando Containers
+This will build images if needed and start all containers.
 
-1. Clique em **"Containers"**
-2. Você verá a lista de todos os containers
-3. Ações disponíveis:
-   - **Start/Stop:** Iniciar ou parar
-   - **Restart:** Reiniciar
-   - **Logs:** Ver logs do container
-   - **Console:** Acessar terminal
+### Stop Infrastructure
 
-### Visualizando Logs
+To stop all containers:
 
-1. Clique no nome do container
-2. Clique em **"Logs"**
-3. Opções:
-   - Auto-refresh: Atualizar automaticamente
-   - Timestamps: Mostrar data/hora
-   - Lines: Número de linhas
-
-### Console do Container
-
-1. Clique no nome do container
-2. Clique em **"Console"**
-3. Selecione o shell (`/bin/sh` ou `/bin/bash`)
-4. Clique em **"Connect"**
-5. Você terá acesso ao terminal do container
-
----
-
-## FTP
-
-### Informações de Conexão
-
-| Campo    | Valor                             |
-| -------- | --------------------------------- |
-| Servidor | peda-cos.42.fr                    |
-| Porta    | 21                                |
-| Usuário  | ftpuser (ou conforme configurado) |
-| Senha    | (fornecida pelo admin)            |
-| Modo     | Passivo                           |
-
-### Clientes FTP Recomendados
-
-- **FileZilla** (Windows, Mac, Linux)
-- **Cyberduck** (Mac, Windows)
-- **WinSCP** (Windows)
-
-### Conectando com FileZilla
-
-1. Abra o FileZilla
-2. Preencha:
-   - Host: `peda-cos.42.fr`
-   - Usuário: `ftpuser`
-   - Senha: (sua senha)
-   - Porta: `21`
-3. Clique em **"Conexão Rápida"**
-
-### Estrutura de Arquivos
-
-```
-/                          <- Raiz do FTP (wp-content)
-├── themes/                <- Temas do WordPress
-├── plugins/               <- Plugins
-├── uploads/               <- Arquivos enviados
-│   └── 2024/              <- Organizado por ano
-│       └── 01/            <- E por mês
-└── languages/             <- Arquivos de idioma
+```bash
+make clean
 ```
 
-### Enviando Arquivos
+Containers stop but data persists in volumes.
 
-1. Navegue até a pasta desejada no servidor (lado direito)
-2. Navegue até a pasta local com seus arquivos (lado esquerdo)
-3. Arraste os arquivos da esquerda para a direita
-4. Aguarde a transferência completar
+### View Logs
 
-### Baixando Arquivos
+To view service logs:
 
-1. Navegue até a pasta no servidor com os arquivos
-2. Navegue até a pasta local onde deseja salvar
-3. Arraste os arquivos da direita para a esquerda
+```bash
+# All services
+docker compose -f srcs/docker-compose.yml logs -f
 
----
+# Specific service
+docker compose -f srcs/docker-compose.yml logs -f nginx
+docker compose -f srcs/docker-compose.yml logs -f wordpress
+docker compose -f srcs/docker-compose.yml logs -f mariadb
+```
 
-## Solução de Problemas
+### Check Service Status
 
-### Não Consigo Acessar o Site
+```bash
+docker compose -f srcs/docker-compose.yml ps
+```
 
-**Problema:** Página não carrega ou erro de conexão
+### Restart Single Service
 
-**Soluções:**
+```bash
+docker compose -f srcs/docker-compose.yml restart nginx
+```
 
-1. Verifique se digitou a URL corretamente
-2. Verifique sua conexão com a internet
-3. Limpe o cache do navegador (Ctrl+Shift+Delete)
-4. Tente outro navegador
-5. Contate o administrador
+### Clean Everything
 
-### Aviso de Certificado
+⚠️ **WARNING**: This deletes all data (database, uploads, posts)!
 
-**Problema:** Navegador mostra aviso de segurança
+```bash
+make fclean
+```
 
-**Solução:**
+Then rebuild:
 
-- Isso é esperado com certificados autoassinados
-- Clique em "Avançado" e aceite continuar
-- Isso NÃO significa que o site é inseguro
+```bash
+make
+```
 
-### Esqueci Minha Senha (WordPress)
+## Using WordPress
 
-**Problema:** Não lembro a senha do WordPress
+### Creating Content
 
-**Soluções:**
+1. Login to admin panel: `https://peda-cos.42.fr/wp-admin`
+2. Username: `supervisor`
+3. Password: Check `secrets/credentials.txt`
 
-1. Na tela de login, clique em **"Perdeu a senha?"**
-2. Digite seu email ou usuário
-3. Clique em **"Obter nova senha"**
-4. Verifique seu email e siga as instruções
+### Installing Themes/Plugins
 
-Se não receber o email, contate o administrador.
+**Via WordPress UI**:
 
-### Erro ao Fazer Upload
+1. Dashboard → Appearance → Themes → Add New
+2. Dashboard → Plugins → Add New
 
-**Problema:** Não consigo enviar arquivos
+**Via FTP**:
 
-**Possíveis causas:**
+1. Connect via FTP (see FTP section above)
+2. Upload to `/var/www/html/wp-content/themes/` (themes)
+3. Upload to `/var/www/html/wp-content/plugins/` (plugins)
 
-- Arquivo muito grande (limite: 64MB)
-- Tipo de arquivo não permitido
-- Espaço em disco cheio
+### Uploading Media
 
-**Soluções:**
+**Via WordPress UI**:
 
-1. Reduza o tamanho do arquivo
-2. Converta para formato aceito (jpg, png, pdf)
-3. Contate o administrador se persistir
+- Media → Add New → Upload files
 
-### FTP Não Conecta
+**Via FTP**:
 
-**Problema:** Erro de conexão FTP
+- Upload to `/var/www/html/wp-content/uploads/`
 
-**Soluções:**
+## Troubleshooting
 
-1. Verifique usuário e senha
-2. Confirme que está usando modo passivo
-3. Verifique se firewall não está bloqueando
-4. Tente porta 21 especificamente
+### Service Won't Start
 
-### Site Lento
+Check logs:
 
-**Problema:** Páginas demoram para carregar
+```bash
+# All services
+docker compose -f srcs/docker-compose.yml logs -f
 
-**Soluções:**
+# Specific service
+docker compose -f srcs/docker-compose.yml logs -f [service-name]
+```
 
-1. Limpe cache do navegador
-2. Tente em outro horário
-3. Verifique sua conexão de internet
-4. Contate o administrador
+### Can't Access Website
 
----
+1. **Check `/etc/hosts`**:
 
-## Contato e Suporte
+   ```bash
+   cat /etc/hosts | grep peda-cos
+   ```
 
-Para problemas técnicos ou dúvidas, contate:
+   Should show: `127.0.0.1 peda-cos.42.fr ...`
 
-- **Administrador:** peda-cos
-- **Email:** peda-cos@student.42sp.org.br
+2. **Check containers are running**:
 
-### Informações Úteis para Suporte
+   ```bash
+   docker compose -f srcs/docker-compose.yml ps
+   ```
 
-Ao reportar um problema, inclua:
+   All should show "Up"
 
-- Qual serviço está com problema (WordPress, FTP, etc.)
-- Qual ação estava tentando fazer
-- Mensagem de erro exata (screenshot ajuda!)
-- Navegador e versão que está usando
-- Horário aproximado do problema
+3. **Check NGINX logs**:
+   ```bash
+   docker compose -f srcs/docker-compose.yml logs nginx
+   ```
 
----
+### Database Connection Error
 
-_Documentação do Usuário - Inception v1.0 - Janeiro 2026_
+1. **Wait 30 seconds** - MariaDB takes time to initialize on first run
+2. **Check MariaDB logs**:
+   ```bash
+   docker compose -f srcs/docker-compose.yml logs mariadb
+   ```
+3. **Restart WordPress**:
+   ```bash
+   docker compose -f srcs/docker-compose.yml restart wordpress
+   ```
+
+### FTP Connection Fails
+
+1. **Passive mode required** - Enable in FTP client settings
+2. **Check FTP logs**:
+   ```bash
+   docker compose -f srcs/docker-compose.yml logs ftp
+   ```
+3. **Verify password** from `secrets/ftp_password.txt`
+
+### WordPress Slow
+
+Enable Redis cache (already configured):
+
+1. Install Redis Object Cache plugin via WordPress admin
+2. Activate plugin
+3. Go to Settings → Redis → Enable Object Cache
+
+### Forgot WordPress Password
+
+Reset via WP-CLI:
+
+```bash
+docker compose -f srcs/docker-compose.yml exec wordpress wp user update supervisor --user_pass=NewPassword123! --allow-root
+```
+
+## Data Backup
+
+### Backup WordPress Files
+
+```bash
+tar -czf wordpress-backup-$(date +%Y%m%d).tar.gz /home/peda-cos/data/wordpress
+```
+
+### Backup Database
+
+```bash
+docker compose -f srcs/docker-compose.yml exec mariadb mysqldump -u root -p$(cat secrets/db_root_password.txt) wordpress > wordpress-db-backup-$(date +%Y%m%d).sql
+```
+
+### Restore Database
+
+```bash
+cat wordpress-db-backup-YYYYMMDD.sql | docker compose -f srcs/docker-compose.yml exec -T mariadb mysql -u root -p$(cat secrets/db_root_password.txt) wordpress
+```
+
+## Performance Monitoring
+
+### Resource Usage
+
+```bash
+docker stats
+```
+
+Shows real-time CPU, memory, network usage per container.
+
+### Container Health
+
+```bash
+docker compose -f srcs/docker-compose.yml ps
+```
+
+Check "Status" column - should show "healthy" for all services.
+
+## Security Notes
+
+1. **Secrets Files**: Never commit `secrets/` directory to version control
+2. **Self-Signed Certificates**: Only use in development/evaluation
+3. **Default Passwords**: Change all passwords in production
+4. **FTP Access**: Use SFTP/FTPS in production environments
+5. **Admin User**: Default username `supervisor` doesn't contain "admin" (42 requirement)
+
+## Support
+
+For issues:
+
+1. Check logs: `docker compose -f srcs/docker-compose.yml logs -f`
+2. Verify all containers healthy: `docker compose -f srcs/docker-compose.yml ps`
+3. Review troubleshooting section above
+4. Check DEV_DOC.md for development-specific issues

@@ -1,238 +1,338 @@
-_Este projeto foi desenvolvido como parte do currículo da 42 São Paulo, utilizando Docker para criar uma infraestrutura completa de serviços web._
+*This project has been created as part of the 42 curriculum by peda-cos*
 
-# Inception
+# Inception - Docker Infrastructure Project
 
-Infraestrutura Docker para hospedar WordPress com NGINX, MariaDB e serviços bônus, implementando boas práticas de containerização, segurança e automação.
+42 School project implementing a complete multi-container infrastructure using Docker and Docker Compose.
 
----
+## Project Description
 
-## Descrição
+### Virtual Machines vs Docker
 
-O projeto Inception consiste em configurar uma pequena infraestrutura composta por diferentes serviços usando Docker e Docker Compose. Cada serviço roda em um container dedicado, construído a partir de Dockerfiles customizados baseados em Debian Bullseye.
+**Virtual Machines (VMs)**:
+- Complete guest operating system with dedicated kernel
+- Hardware-level virtualization via hypervisor
+- High resource overhead (GBs of RAM, full OS install)
+- Strong isolation but heavy performance cost
+- Slow boot times (minutes)
+- Each VM requires full OS maintenance
 
-### Arquitetura
+**Docker Containers**:
+- Share host OS kernel (OS-level virtualization)
+- Lightweight process isolation via namespaces and cgroups
+- Minimal overhead (MBs of RAM, no full OS)
+- Near-native performance
+- Fast startup (seconds)
+- Shared kernel reduces maintenance burden
+
+**Why Docker for this project**: Faster development cycles, efficient resource usage, consistent environments across development and production.
+
+### Secrets vs Environment Variables
+
+**Environment Variables**:
+- Stored in `.env` file and passed to containers at runtime
+- Visible in `docker inspect`, logs, and process listings
+- Suitable for non-sensitive configuration (ports, hostnames, usernames)
+- Easy to debug and inspect
+- Can leak through error messages and logs
+
+**Docker Secrets**:
+- Mounted as files in `/run/secrets/` directory
+- Never appear in environment or process listings
+- Suitable for sensitive data (passwords, API keys, tokens)
+- Read-only access, removed when container stops
+- Protected from accidental logging
+
+**Implementation**: This project uses Docker secrets for all passwords (database, FTP, admin credentials) and environment variables for configuration values.
+
+### Docker Network vs Host Network
+
+**Host Network**:
+- Containers share the host's network stack
+- No network isolation between containers
+- Direct access to host's network interfaces
+- Port conflicts possible if multiple services use same port
+- Faster network performance (no bridge overhead)
+
+**Docker Bridge Network**:
+- Isolated virtual network for containers
+- DNS-based service discovery (containers resolve by name)
+- Port mapping required for external access
+- Complete network isolation from host
+- Additional network hop (slight performance cost)
+
+**Implementation**: This project uses a custom bridge network `inception` for service isolation and DNS-based discovery. Only NGINX exposes ports to the host (443).
+
+### Docker Volumes vs Bind Mounts
+
+**Bind Mounts**:
+- Direct mapping of host directory to container path
+- Host filesystem changes immediately visible in container
+- Depends on host directory structure
+- No Docker management (manual backup/restore)
+- Can use any host path
+
+**Docker Volumes**:
+- Managed by Docker in `/var/lib/docker/volumes/`
+- Portable across systems (no host path dependency)
+- Docker handles backup, restore, and migration
+- Can be shared between multiple containers
+- Better isolation from host filesystem
+
+**Implementation**: This project uses named volumes with bind mount driver options to store data at `/home/peda-cos/data/` for easy backup while maintaining Docker volume semantics.
+
+## Architecture Overview
+
+This project demonstrates infrastructure virtualization using Docker containers orchestrated by Docker Compose. The architecture follows a microservices pattern with isolated, single-responsibility services communicating through a custom Docker network.
+
+### Why Docker vs Virtual Machines?
+
+**Virtual Machines** run complete operating systems with dedicated kernels, requiring significant overhead (memory, CPU, storage). Each VM includes a full OS stack.
+
+**Docker Containers** share the host OS kernel, running isolated processes with minimal overhead. Containers are:
+
+- **Lightweight**: Start in seconds, use minimal resources
+- **Portable**: Consistent behavior across environments
+- **Isolated**: Each container runs independently
+- **Efficient**: Share common layers, optimize storage
+
+### Services Architecture
+
+#### Mandatory Services
+
+1. **NGINX** (Port 443)
+   - TLS 1.3 termination with self-signed certificates
+   - Reverse proxy for WordPress and bonus services
+   - Serves static content
+
+2. **MariaDB** (Port 3306, internal)
+   - Relational database for WordPress
+   - Persistent data via Docker volumes
+   - Custom configuration for optimization
+
+3. **WordPress + PHP-FPM** (Port 9000, internal)
+   - Content management system
+   - PHP-FPM for FastCGI processing
+   - WP-CLI for automation
+
+#### Bonus Services
+
+4. **Redis** (Port 6379, internal)
+   - Object caching for WordPress
+   - In-memory key-value store
+
+5. **FTP (vsftpd)** (Ports 21, 21100-21110)
+   - File transfer to WordPress volume
+   - Passive mode for firewall compatibility
+
+6. **Adminer** (Port 8080, proxied)
+   - Web-based database management
+   - Alternative to phpMyAdmin
+
+7. **Static Site** (Port 80, proxied)
+   - Portfolio/landing page
+   - Served directly by NGINX
+
+8. **Portainer** (Port 9000, exposed)
+   - Docker management UI
+   - Container monitoring and control
+
+## Security Architecture
+
+### Secrets vs Environment Variables
+
+**Environment Variables** (`.env` file):
+
+- Non-sensitive configuration (hostnames, ports, usernames)
+- Visible in container inspect, logs, and process lists
+- Used for: `DOMAIN_NAME`, `MYSQL_USER`, `WORDPRESS_ADMIN_USER`
+
+**Docker Secrets** (`secrets/` directory):
+
+- Sensitive credentials (passwords, tokens)
+- Mounted as in-memory files at `/run/secrets/`
+- Never logged or exposed in container metadata
+- Used for: Database passwords, FTP passwords, admin credentials
+
+**Security Benefits**:
+
+- Secrets aren't committed to version control (`.gitignore`)
+- Secrets aren't visible in `docker inspect` output
+- Secrets are mounted read-only with restricted permissions
+- Secrets are removed when container stops
+
+### TLS/SSL Implementation
+
+- Self-signed X.509 certificates generated during build
+- TLS 1.3 with modern cipher suites
+- Subject Alternative Names (SAN) for all subdomains
+- 2048-bit RSA keys + Diffie-Hellman parameters
+
+## Network Architecture
+
+### Custom Bridge Network: `inception-network`
+
+All services communicate through an isolated Docker bridge network providing:
+
+**DNS Resolution**: Containers resolve each other by service name
 
 ```
-                    +-------------+
-                    |   Cliente   |
-                    |  (Browser)  |
-                    +------+------+
-                           |
-                           | HTTPS (443)
-                           v
-                    +------+------+
-                    |    NGINX    |
-                    | TLSv1.2/1.3 |
-                    +------+------+
-                           |
-          +----------------+----------------+
-          |                |                |
-          v                v                v
-    +-----------+    +-----------+    +-----------+
-    | WordPress |    |   Redis   |    |   Static  |
-    |  PHP-FPM  |    |   Cache   |    |   Site    |
-    +-----+-----+    +-----------+    +-----------+
-          |
-          v
-    +-----------+
-    |  MariaDB  |
-    +-----------+
+wordpress -> mariadb:3306  # Instead of IP addresses
 ```
 
-### Serviços Implementados
+**Isolation**: Services aren't accessible from host except exposed ports
 
-| Serviço         | Descrição            | Porta Interna   |
-| --------------- | -------------------- | --------------- |
-| **NGINX**       | Servidor web com TLS | 443             |
-| **WordPress**   | CMS com PHP-FPM      | 9000            |
-| **MariaDB**     | Banco de dados       | 3306            |
-| **Redis**       | Cache de objetos     | 6379            |
-| **FTP**         | Servidor de arquivos | 21, 21000-21010 |
-| **Adminer**     | Gerenciador de BD    | 8080            |
-| **Static Site** | Portfólio HTML/CSS   | 8081            |
-| **Portainer**   | Gerenciador Docker   | 9000            |
+**Service Discovery**: Automatic DNS entries for all containers
 
----
+### Port Mapping Strategy
 
-## Instruções
+**Exposed Ports** (accessible from host):
 
-### Pré-requisitos
+- `443` → NGINX (HTTPS)
+- `9000` → Portainer (Management UI)
 
-- Virtual Machine com Debian/Ubuntu
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-- 4GB RAM mínimo
-- 20GB espaço em disco
+**Internal Ports** (network-only):
 
-### Instalação
+- `3306` → MariaDB
+- `9000` → WordPress PHP-FPM
+- `6379` → Redis
+- `8080` → Adminer (proxied via NGINX)
+- `8081` → Static Site (proxied via NGINX)
+- `21`, `21100-21110` → FTP
 
-1. **Clonar o repositório:**
+## Volume Architecture
 
-   ```bash
-   git clone <repository-url> inception
-   cd inception
-   ```
+### Persistent Data Storage
 
-2. **Configurar secrets:**
+Docker volumes provide data persistence independent of container lifecycle:
 
-   ```bash
-   mkdir -p secrets
-   echo "sua_senha_root_mysql" > secrets/db_root_password.txt
-   echo "sua_senha_usuario_mysql" > secrets/db_password.txt
-   echo "usuario_wp:senha_wp" > secrets/credentials.txt
-   echo "sua_senha_ftp" > secrets/ftp_password.txt
-   chmod 600 secrets/*
-   ```
+1. **WordPress Data** (`/home/peda-cos/data/wordpress`)
+   - WordPress files, themes, plugins, uploads
+   - Shared between WordPress and FTP containers
+   - Bind mount for direct host access
 
-3. **Configurar domínio (hosts):**
+2. **Database Data** (`/home/peda-cos/data/mariadb`)
+   - MariaDB database files
+   - Persists across container restarts/rebuilds
+   - Bind mount for backup accessibility
 
-   ```bash
-   echo "127.0.0.1 peda-cos.42.fr" | sudo tee -a /etc/hosts
-   echo "127.0.0.1 www.peda-cos.42.fr" | sudo tee -a /etc/hosts
-   echo "127.0.0.1 adminer.peda-cos.42.fr" | sudo tee -a /etc/hosts
-   echo "127.0.0.1 static.peda-cos.42.fr" | sudo tee -a /etc/hosts
-   echo "127.0.0.1 portainer.peda-cos.42.fr" | sudo tee -a /etc/hosts
-   ```
+### Volume Benefits
 
-4. **Criar diretórios de dados:**
+- **Persistence**: Data survives container removal
+- **Performance**: Direct kernel I/O, no abstraction
+- **Backups**: Easy host-level backup/restore
+- **Sharing**: Multiple containers can mount same volume
 
-   ```bash
-   mkdir -p /home/peda-cos/data/{wordpress,mariadb,redis,portainer}
-   ```
+## Container Images
 
-5. **Construir e iniciar:**
+All images built `FROM debian:oldstable` ensuring:
 
-   ```bash
-   make
-   ```
+- Stability (penultimate version requirement)
+- Security updates
+- Consistent base across services
+- Small attack surface
 
-6. **Acessar:**
-   - WordPress: https://peda-cos.42.fr
-   - Adminer: https://adminer.peda-cos.42.fr
-   - Portfólio: https://static.peda-cos.42.fr
-   - Portainer: https://portainer.peda-cos.42.fr
+### Version Pinning Strategy
 
-### Comandos Disponíveis
+**Explicit Versions** (penultimate stable):
 
-```bash
-make          # Build e inicia todos os containers
-make build    # Apenas build das imagens
-make up       # Inicia containers existentes
-make down     # Para containers
-make clean    # Remove containers e imagens
-make fclean   # Remove tudo (incluindo volumes)
-make re       # Rebuild completo
-make logs     # Ver logs de todos os serviços
-make status   # Ver status dos containers
+- WordPress: `6.7.x`
+- Adminer: `5.4.0`
+- Portainer: `2.33.5`
+
+**Debian Packages** (oldstable repository):
+
+- NGINX: Latest in `oldstable`
+- MariaDB: Latest in `oldstable`
+- PHP: `8.2.x` from `oldstable`
+- Redis: Latest in `oldstable`
+
+## Build and Initialization
+
+### Container Initialization Scripts
+
+Each service includes entrypoint scripts handling:
+
+- Secret reading from `/run/secrets/`
+- First-run initialization vs restart detection
+- Health checks and dependency waiting
+- Graceful shutdown (PID 1 signal handling)
+
+### Initialization Order
+
+Docker Compose handles dependency order via `depends_on`:
+
+```
+MariaDB → WordPress → NGINX
 ```
 
----
+Services wait for dependencies using health checks and connection retries.
 
-## Recursos
+## Project Structure
 
-### Comparações Técnicas
+```
+inception/
+├── Makefile                 # Build, start, stop, clean commands
+├── secrets/                 # Docker secrets (not in git)
+│   ├── db_root_password.txt
+│   ├── db_password.txt
+│   ├── ftp_password.txt
+│   └── credentials.txt
+└── srcs/
+    ├── .env                 # Environment configuration
+    ├── docker-compose.yml   # Service orchestration
+    └── requirements/
+        ├── nginx/           # Web server + TLS
+        ├── mariadb/         # Database
+        ├── wordpress/       # CMS + PHP-FPM
+        └── bonus/
+            ├── redis/       # Cache
+            ├── ftp/         # File transfer
+            ├── adminer/     # DB admin
+            ├── static-site/ # Portfolio
+            └── portainer/   # Container management
+```
 
-#### Máquinas Virtuais vs Docker Containers
+## Key Design Decisions
 
-| Aspecto           | Máquina Virtual       | Container Docker          |
-| ----------------- | --------------------- | ------------------------- |
-| **Virtualização** | Hardware (hypervisor) | SO (kernel compartilhado) |
-| **Tamanho**       | GBs (OS completo)     | MBs (apenas app + deps)   |
-| **Inicialização** | Minutos               | Segundos                  |
-| **Isolamento**    | Completo              | Nível de processo         |
-| **Overhead**      | Alto (RAM, CPU)       | Baixo                     |
-| **Portabilidade** | Limitada              | Alta (imagens)            |
-| **Densidade**     | ~10-20 por host       | ~100s por host            |
+1. **Single-Process Containers**: Each container runs one service (PID 1)
+2. **No Latest Tags**: All versions explicitly pinned
+3. **Health Checks**: Every service includes health check logic
+4. **Graceful Shutdown**: Proper signal handling (SIGTERM → SIGKILL)
+5. **Read-Only Secrets**: Mounted as in-memory files
+6. **Custom Network**: Isolated bridge network for inter-service communication
+7. **Bind Mounts**: Persistent volumes at `/home/peda-cos/data/`
 
-**Quando usar VMs:**
+## Compliance Notes
 
-- Isolamento completo necessário
-- Diferentes sistemas operacionais
-- Aplicações legadas
+**42 Subject Requirements**:
 
-**Quando usar Containers:**
+- ✅ TLS 1.3 only (NGINX)
+- ✅ Two volumes (WordPress, MariaDB)
+- ✅ Custom Docker network
+- ✅ Containers restart on crash
+- ✅ No `latest` tags
+- ✅ Penultimate stable versions
+- ✅ Domain: `peda-cos.42.fr` (via `/etc/hosts`)
+- ✅ Admin username doesn't contain "admin"
+- ✅ Dockerfiles in dedicated folders
+- ✅ One service per container
 
-- Microsserviços
-- CI/CD pipelines
-- Ambientes de desenvolvimento
-- Escalabilidade horizontal
+## Resources
 
-#### Docker Secrets vs Environment Variables
-
-| Aspecto           | Environment Variables  | Docker Secrets             |
-| ----------------- | ---------------------- | -------------------------- |
-| **Armazenamento** | Em memória, visível    | Encriptado em disco        |
-| **Acesso**        | `docker inspect` expõe | Apenas dentro do container |
-| **Gerenciamento** | Manual                 | Via Docker/Swarm           |
-| **Rotação**       | Requer restart         | Pode ser atualizado        |
-| **Auditoria**     | Difícil                | Logs disponíveis           |
-
-**Recomendação:** Use secrets para senhas, tokens, certificados. Use env vars para configurações não-sensíveis.
-
-#### Docker Network vs Host Network
-
-| Aspecto         | Network Customizada  | Host Network   |
-| --------------- | -------------------- | -------------- |
-| **Isolamento**  | Completo             | Nenhum         |
-| **DNS interno** | Sim (por nome)       | Não            |
-| **Portas**      | Mapeamento explícito | Todas expostas |
-| **Segurança**   | Alta                 | Baixa          |
-| **Performance** | Mínimo overhead      | Sem overhead   |
-
-**Recomendação:** Sempre use networks customizadas exceto para casos muito específicos de performance.
-
-#### Docker Volumes vs Bind Mounts
-
-| Aspecto           | Volumes                    | Bind Mounts         |
-| ----------------- | -------------------------- | ------------------- |
-| **Gerenciamento** | Docker gerencia            | Usuário gerencia    |
-| **Localização**   | `/var/lib/docker/volumes/` | Qualquer path       |
-| **Portabilidade** | Alta                       | Depende do host     |
-| **Performance**   | Otimizada                  | Varia               |
-| **Backup**        | `docker volume` commands   | Ferramentas do host |
-| **Permissões**    | Gerenciadas                | Podem conflitar     |
-
-**Recomendação:** Use volumes para dados de aplicação, bind mounts para desenvolvimento.
-
-### Uso de IA
-
-Este projeto utilizou ferramentas de IA como assistentes no desenvolvimento:
-
-| Ferramenta             | Uso                                              |
-| ---------------------- | ------------------------------------------------ |
-| **Claude (Anthropic)** | Geração de documentação, código, troubleshooting |
-
-A IA foi utilizada para:
-
-- Gerar estrutura de Dockerfiles seguindo boas práticas
-- Criar scripts de inicialização
-- Escrever documentação técnica
-- Identificar e resolver problemas comuns
-
-**Importante:** Todo código gerado foi revisado, testado e adaptado. O desenvolvedor é capaz de explicar cada componente.
-
-### Documentação Adicional
-
-- [Tutorial Completo](docs/00-INDICE.md)
-- [Documentação do Usuário](USER_DOC.md)
-- [Documentação do Desenvolvedor](DEV_DOC.md)
-
-### Referências Externas
+### References
 
 - [Docker Documentation](https://docs.docker.com/)
+- [Docker Compose Specification](https://docs.docker.com/compose/compose-file/)
 - [NGINX Documentation](https://nginx.org/en/docs/)
-- [MariaDB Documentation](https://mariadb.com/kb/en/documentation/)
-- [WordPress Developer](https://developer.wordpress.org/)
-- [WP-CLI](https://developer.wordpress.org/cli/commands/)
+- [MariaDB Documentation](https://mariadb.com/kb/en/)
+- [WordPress Codex](https://codex.wordpress.org/)
 
----
+### AI Usage
 
-## Autor
+This project was developed with assistance from AI tools (Claude Code) for:
+- Code review and debugging
+- Configuration file generation (Docker, NGINX, PHP-FPM)
+- Documentation structure and content
+- Troubleshooting container networking issues
 
-**peda-cos** - 42 São Paulo
-
----
-
-## Licença
-
-Este projeto foi desenvolvido para fins educacionais como parte do currículo da 42.
+All code was written and tested by the project author. AI assistance was used as a productivity tool to accelerate development and ensure best practices.
