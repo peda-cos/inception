@@ -1,330 +1,356 @@
-# User Documentation - Inception Project
+# Inception - User Documentation
 
-Complete guide for using and accessing the Inception infrastructure.
+This guide explains how to start, stop, and use the Inception infrastructure — a multi-container WordPress stack running on Docker.
 
-## Prerequisites
+## Services Overview
 
-- Linux or macOS system with Docker and Docker Compose installed
-- Administrative access (for editing `/etc/hosts`)
-- At least 4GB free RAM
-- 10GB free disk space
+The infrastructure provides the following services:
 
-## Initial Setup
+| Service | URL / Access | Purpose |
+|---------|-------------|---------|
+| **WordPress** | `https://peda-cos.42.fr` | Main website and Content Management System |
+| **WordPress Admin** | `https://peda-cos.42.fr/wp-admin` | Website administration panel |
+| **Adminer** | `https://adminer.peda-cos.42.fr` | Database management web interface |
+| **Static Site** | `https://static.peda-cos.42.fr` | Personal portfolio page |
+| **Portainer** | `https://portainer.peda-cos.42.fr` | Docker container management UI |
+| **FTP** | `peda-cos.42.fr:21` | File transfer access to WordPress files |
 
-### 1. Configure Domain Resolution
-
-Add the following line to your `/etc/hosts` file:
-
-```bash
-sudo nano /etc/hosts
-```
-
-Add:
+### How the services relate
 
 ```
-127.0.0.1   peda-cos.42.fr www.peda-cos.42.fr adminer.peda-cos.42.fr static.peda-cos.42.fr portainer.peda-cos.42.fr
+You (browser on port 443)
+        │
+        ▼
+    NGINX  ──────────────────── TLS termination and routing
+    ├── WordPress site          WordPress + PHP-FPM
+    │       ├── MariaDB         Database (stores all content)
+    │       └── Redis           Object cache (faster page loads)
+    ├── Adminer                 Manage the database via browser
+    ├── Static Site             Portfolio page
+    └── Portainer               Docker management dashboard
+
+FTP (port 21) ──────────────── Direct file access to WordPress volume
 ```
 
-### 2. Build and Start Services
+NGINX is the **only entry point** for web traffic. All HTTPS requests go through it.
 
-Navigate to project root and run:
+---
 
-```bash
-make
-```
+## Starting and Stopping the Project
 
-This will:
+All commands are run from the **project root directory** (`inception/`).
 
-1. Create necessary data directories
-2. Build all Docker images
-3. Start all containers
-4. Initialize databases and services
-
-**First build takes 5-10 minutes** depending on internet speed.
-
-## Accessing Services
-
-Once started, services are available at:
-
-### Primary Services
-
-**WordPress CMS**
-
-- URL: `https://peda-cos.42.fr`
-- Admin Panel: `https://peda-cos.42.fr/wp-admin`
-- Admin User: `supervisor`
-- Admin Password: Check `secrets/credentials.txt` → `WORDPRESS_ADMIN_PASSWORD`
-- Editor User: `editor`
-- Editor Password: Check `secrets/credentials.txt` → `WORDPRESS_USER_PASSWORD`
-
-**Certificate Warning**: You'll see a browser security warning because we use self-signed certificates. Click "Advanced" → "Proceed to site" (safe for local development).
-
-### Bonus Services
-
-**Adminer (Database Management)**
-
-- URL: `https://adminer.peda-cos.42.fr`
-- System: `MySQL`
-- Server: `mariadb`
-- Username: `wpuser`
-- Password: Check `secrets/db_password.txt`
-- Database: `wordpress`
-
-**Static Portfolio Site**
-
-- URL: `https://static.peda-cos.42.fr`
-- No authentication required
-
-**Portainer (Docker Management)**
-
-- URL: `http://peda-cos.42.fr:9000`
-- First Visit: Create admin account
-- Then: Login with your credentials
-
-**FTP Server**
-
-- Host: `peda-cos.42.fr`
-- Port: `21`
-- User: `ftpuser`
-- Password: Check `secrets/ftp_password.txt`
-- Directory: `/var/www/html` (WordPress files)
-
-**FTP Client Example (FileZilla)**:
-
-```
-Host: peda-cos.42.fr
-Port: 21
-Username: ftpuser
-Password: [from secrets/ftp_password.txt]
-Transfer Mode: Passive
-```
-
-**FTP Client Example (Command Line)**:
-
-```bash
-ftp peda-cos.42.fr
-# Enter username: ftpuser
-# Enter password: [from secrets/ftp_password.txt]
-```
-
-## Common Operations
-
-### Start Infrastructure
-
-To build and start all services:
+### Start the infrastructure
 
 ```bash
 make
 ```
 
-This will build images if needed and start all containers.
+On first run this will:
+1. Create data directories at `/home/peda-cos/data/`
+2. Build all Docker images from source
+3. Start all 8 containers in dependency order
+4. Initialize WordPress and the database automatically
 
-### Stop Infrastructure
+**First build takes approximately 5–10 minutes.** Subsequent starts are much faster.
 
-To stop all containers:
+### Stop the infrastructure (preserve data)
 
 ```bash
 make clean
 ```
 
-Containers stop but data persists in volumes.
+Stops and removes all containers. All your data (WordPress content, database, uploads) is preserved in `/home/peda-cos/data/` and will be available when you start again.
 
-### View Logs
+### Rebuild from scratch (delete all data)
 
-To view service logs:
-
-```bash
-# All services
-docker compose -f srcs/docker-compose.yml logs -f
-
-# Specific service
-docker compose -f srcs/docker-compose.yml logs -f nginx
-docker compose -f srcs/docker-compose.yml logs -f wordpress
-docker compose -f srcs/docker-compose.yml logs -f mariadb
-```
-
-### Check Service Status
-
-```bash
-docker compose -f srcs/docker-compose.yml ps
-```
-
-### Restart Single Service
-
-```bash
-docker compose -f srcs/docker-compose.yml restart nginx
-```
-
-### Clean Everything
-
-⚠️ **WARNING**: This deletes all data (database, uploads, posts)!
+> **Warning:** This permanently deletes all WordPress content, posts, uploads, and database data.
 
 ```bash
 make fclean
 ```
 
-Then rebuild:
+Then start fresh:
 
 ```bash
 make
 ```
 
-## Using WordPress
+Or do both steps in one command:
 
-### Creating Content
+```bash
+make re
+```
 
-1. Login to admin panel: `https://peda-cos.42.fr/wp-admin`
-2. Username: `supervisor`
-3. Password: Check `secrets/credentials.txt`
+---
 
-### Installing Themes/Plugins
+## Accessing the Services
 
-**Via WordPress UI**:
+### Before first access: configure domain resolution
 
-1. Dashboard → Appearance → Themes → Add New
-2. Dashboard → Plugins → Add New
+Add the following line to `/etc/hosts` on your machine (requires administrator/sudo):
 
-**Via FTP**:
+```bash
+sudo nano /etc/hosts
+```
 
-1. Connect via FTP (see FTP section above)
-2. Upload to `/var/www/html/wp-content/themes/` (themes)
-3. Upload to `/var/www/html/wp-content/plugins/` (plugins)
+Add this line:
 
-### Uploading Media
+```
+127.0.0.1   peda-cos.42.fr www.peda-cos.42.fr adminer.peda-cos.42.fr static.peda-cos.42.fr portainer.peda-cos.42.fr
+```
 
-**Via WordPress UI**:
+Save and close. This maps the domain names to your local machine.
 
-- Media → Add New → Upload files
+### WordPress website
 
-**Via FTP**:
+- **URL**: `https://peda-cos.42.fr`
+- **Admin panel**: `https://peda-cos.42.fr/wp-admin`
 
-- Upload to `/var/www/html/wp-content/uploads/`
+**Certificate warning**: Your browser will show a security warning because the SSL certificate is self-signed (not issued by a public Certificate Authority). This is expected for a local development environment. To proceed:
+- **Chrome/Chromium**: Click "Advanced" → "Proceed to peda-cos.42.fr (unsafe)"
+- **Firefox**: Click "Advanced..." → "Accept the Risk and Continue"
 
-## Troubleshooting
+### Adminer (database management)
 
-### Service Won't Start
+- **URL**: `https://adminer.peda-cos.42.fr`
+- **System**: MySQL
+- **Server**: `mariadb`
+- **Username**: `wpuser`
+- **Password**: see [Credentials](#credentials)
+- **Database**: `wordpress`
 
-Check logs:
+### Static portfolio site
+
+- **URL**: `https://static.peda-cos.42.fr`
+- No authentication required
+
+### Portainer (Docker management)
+
+- **URL**: `https://portainer.peda-cos.42.fr` or `http://peda-cos.42.fr:9000`
+- **First visit**: Create an admin account when prompted
+- Use Portainer to view container status, logs, and resource usage
+
+### FTP server
+
+Connect to the FTP server to upload or manage WordPress files directly.
+
+| Field | Value |
+|-------|-------|
+| Host | `peda-cos.42.fr` |
+| Port | `21` |
+| Username | `ftpuser` |
+| Password | see [Credentials](#credentials) |
+| Transfer mode | **Passive** (required) |
+
+**FileZilla** configuration:
+```
+Host: peda-cos.42.fr
+Port: 21
+Protocol: FTP - File Transfer Protocol
+Encryption: Use explicit FTP over TLS if available
+Logon Type: Normal
+User: ftpuser
+Password: [from secrets/ftp_password.txt]
+Transfer Settings: Passive
+```
+
+**Command line** (Linux):
+```bash
+ftp peda-cos.42.fr
+# Login: ftpuser
+# Password: [from secrets/ftp_password.txt]
+```
+
+The FTP root directory is `/var/www/html` (the WordPress installation).
+
+---
+
+## Credentials
+
+All passwords are stored in plain text files in the `secrets/` directory at the project root. These files are **not committed to git**.
+
+| Service | Username | Password file |
+|---------|----------|--------------|
+| WordPress admin | `supervisor` | `secrets/credentials.txt` → `WORDPRESS_ADMIN_PASSWORD=...` |
+| WordPress editor | `editor` | `secrets/credentials.txt` → `WORDPRESS_USER_PASSWORD=...` |
+| Database (wpuser) | `wpuser` | `secrets/db_password.txt` |
+| Database (root) | `root` | `secrets/db_root_password.txt` |
+| FTP | `ftpuser` | `secrets/ftp_password.txt` |
+
+**To read a credential:**
+
+```bash
+cat /home/peda-cos/secrets/credentials.txt
+cat /home/peda-cos/secrets/db_password.txt
+```
+
+> **Security reminder**: Never share, print, or commit these files. The `secrets/` directory should always be in `.gitignore`.
+
+---
+
+## Checking That Services Are Running
+
+### View all service status
+
+```bash
+docker compose -f srcs/docker-compose.yml ps
+```
+
+All services should show `Up` in the Status column. Services that have passed their health check will show `(healthy)`:
+
+```
+NAME          STATUS          PORTS
+mariadb       Up (healthy)
+wordpress     Up (healthy)
+nginx         Up (healthy)    0.0.0.0:443->443/tcp
+redis         Up (healthy)
+ftp           Up (healthy)    0.0.0.0:21->21/tcp, ...
+adminer       Up (healthy)
+static-site   Up (healthy)
+portainer     Up (healthy)    0.0.0.0:9000->9000/tcp
+```
+
+### View service logs
 
 ```bash
 # All services
 docker compose -f srcs/docker-compose.yml logs -f
 
-# Specific service
-docker compose -f srcs/docker-compose.yml logs -f [service-name]
+# A specific service
+docker compose -f srcs/docker-compose.yml logs -f nginx
+docker compose -f srcs/docker-compose.yml logs -f wordpress
+docker compose -f srcs/docker-compose.yml logs -f mariadb
 ```
 
-### Can't Access Website
+Press `Ctrl+C` to stop following logs.
+
+### Restart a single service
+
+```bash
+docker compose -f srcs/docker-compose.yml restart nginx
+```
+
+---
+
+## Troubleshooting
+
+### Website not accessible
 
 1. **Check `/etc/hosts`**:
-
    ```bash
-   cat /etc/hosts | grep peda-cos
+   grep peda-cos /etc/hosts
    ```
-
-   Should show: `127.0.0.1 peda-cos.42.fr ...`
+   Expected: `127.0.0.1   peda-cos.42.fr ...`
 
 2. **Check containers are running**:
-
    ```bash
    docker compose -f srcs/docker-compose.yml ps
    ```
-
-   All should show "Up"
+   All should show `Up`. If any show `Exited`, check its logs.
 
 3. **Check NGINX logs**:
    ```bash
    docker compose -f srcs/docker-compose.yml logs nginx
    ```
 
-### Database Connection Error
+### Certificate warning / HTTPS error
 
-1. **Wait 30 seconds** - MariaDB takes time to initialize on first run
-2. **Check MariaDB logs**:
-   ```bash
-   docker compose -f srcs/docker-compose.yml logs mariadb
-   ```
-3. **Restart WordPress**:
-   ```bash
-   docker compose -f srcs/docker-compose.yml restart wordpress
-   ```
+The self-signed certificate is expected to trigger browser warnings. Follow the browser-specific steps in [Accessing the Services](#accessing-the-services). If the browser shows a connection error (not just a warning), check that NGINX is running and healthy.
 
-### FTP Connection Fails
+### WordPress shows "Error establishing a database connection"
 
-1. **Passive mode required** - Enable in FTP client settings
-2. **Check FTP logs**:
-   ```bash
-   docker compose -f srcs/docker-compose.yml logs ftp
-   ```
-3. **Verify password** from `secrets/ftp_password.txt`
-
-### WordPress Slow
-
-Enable Redis cache (already configured):
-
-1. Install Redis Object Cache plugin via WordPress admin
-2. Activate plugin
-3. Go to Settings → Redis → Enable Object Cache
-
-### Forgot WordPress Password
-
-Reset via WP-CLI:
+MariaDB may still be initializing on first run. Wait 30–60 seconds, then refresh. If the error persists:
 
 ```bash
-docker compose -f srcs/docker-compose.yml exec wordpress wp user update supervisor --user_pass=NewPassword123! --allow-root
+docker compose -f srcs/docker-compose.yml logs mariadb
 ```
 
-## Data Backup
+Look for `"Starting MariaDB..."` — if MariaDB is healthy, restart WordPress:
 
-### Backup WordPress Files
+```bash
+docker compose -f srcs/docker-compose.yml restart wordpress
+```
+
+### Can't log in to WordPress admin
+
+Verify your password by reading the credentials file:
+
+```bash
+cat /home/peda-cos/secrets/credentials.txt
+```
+
+If you need to reset the admin password:
+
+```bash
+docker compose -f srcs/docker-compose.yml exec wordpress wp user update supervisor --user_pass="NewPassword123!" --allow-root
+```
+
+### FTP connection fails
+
+- Ensure your FTP client is configured to use **Passive mode**.
+- Verify the password from `secrets/ftp_password.txt`.
+- Check FTP logs:
+  ```bash
+  docker compose -f srcs/docker-compose.yml logs ftp
+  ```
+
+### Services won't start / "port already in use"
+
+Another service on your machine may be using port 443, 21, or 9000. Stop the conflicting service or check with:
+
+```bash
+sudo ss -tlnp | grep -E '443|9000|:21'
+```
+
+---
+
+## Data Backup and Restore
+
+### Backup WordPress files
 
 ```bash
 tar -czf wordpress-backup-$(date +%Y%m%d).tar.gz /home/peda-cos/data/wordpress
 ```
 
-### Backup Database
+### Backup the database
 
 ```bash
-docker compose -f srcs/docker-compose.yml exec mariadb mysqldump -u root -p$(cat secrets/db_root_password.txt) wordpress > wordpress-db-backup-$(date +%Y%m%d).sql
+docker compose -f srcs/docker-compose.yml exec mariadb \
+  mysqldump -u root -p"$(cat /home/peda-cos/secrets/db_root_password.txt)" wordpress \
+  > wordpress-db-$(date +%Y%m%d).sql
 ```
 
-### Restore Database
+### Restore the database
 
 ```bash
-cat wordpress-db-backup-YYYYMMDD.sql | docker compose -f srcs/docker-compose.yml exec -T mariadb mysql -u root -p$(cat secrets/db_root_password.txt) wordpress
+cat wordpress-db-YYYYMMDD.sql | docker compose -f srcs/docker-compose.yml exec -T mariadb \
+  mysql -u root -p"$(cat /home/peda-cos/secrets/db_root_password.txt)" wordpress
 ```
 
-## Performance Monitoring
-
-### Resource Usage
+### Restore WordPress files
 
 ```bash
-docker stats
+tar -xzf wordpress-backup-YYYYMMDD.tar.gz -C /
 ```
 
-Shows real-time CPU, memory, network usage per container.
+---
 
-### Container Health
+## WordPress Content Management
 
-```bash
-docker compose -f srcs/docker-compose.yml ps
-```
+### Create or edit content
 
-Check "Status" column - should show "healthy" for all services.
+1. Open `https://peda-cos.42.fr/wp-admin`
+2. Login as `supervisor` (password from `secrets/credentials.txt`)
+3. Use the WordPress dashboard to create posts, pages, and manage media
 
-## Security Notes
+### Install themes and plugins
 
-1. **Secrets Files**: Never commit `secrets/` directory to version control
-2. **Self-Signed Certificates**: Only use in development/evaluation
-3. **Default Passwords**: Change all passwords in production
-4. **FTP Access**: Use SFTP/FTPS in production environments
-5. **Admin User**: Default username `supervisor` doesn't contain "admin" (42 requirement)
+**Via WordPress Admin**:
+- Themes: Dashboard → Appearance → Themes → Add New
+- Plugins: Dashboard → Plugins → Add New
 
-## Support
-
-For issues:
-
-1. Check logs: `docker compose -f srcs/docker-compose.yml logs -f`
-2. Verify all containers healthy: `docker compose -f srcs/docker-compose.yml ps`
-3. Review troubleshooting section above
-4. Check DEV_DOC.md for development-specific issues
+**Via FTP** (upload directly):
+- Themes: upload to `/var/www/html/wp-content/themes/`
+- Plugins: upload to `/var/www/html/wp-content/plugins/`
+- Media: upload to `/var/www/html/wp-content/uploads/`
