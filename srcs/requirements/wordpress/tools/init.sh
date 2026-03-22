@@ -13,7 +13,7 @@ read_secret() {
 read_credentials() {
     local cred_file="/run/secrets/credentials"
     if [ -f "$cred_file" ]; then
-        grep "^$1=" "$cred_file" | cut -d'=' -f2 | tr -d '\n'
+        grep "^$1=" "$cred_file" | cut -d'=' -f2- | tr -d '\n'
     else
         echo ""
     fi
@@ -123,12 +123,16 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
         --allow-root
 
     echo "[INFO] Creating second user..."
-    wp user create \
-        "$WORDPRESS_USER" \
-        "$WORDPRESS_USER_EMAIL" \
-        --role="${WORDPRESS_USER_ROLE:-editor}" \
-        --user_pass="$USER_PASSWORD" \
-        --allow-root || echo "[WARN] User already exists"
+    if wp user get "$WORDPRESS_USER" --allow-root > /dev/null 2>&1; then
+        echo "[INFO] User $WORDPRESS_USER already exists, skipping"
+    else
+        wp user create \
+            "$WORDPRESS_USER" \
+            "$WORDPRESS_USER_EMAIL" \
+            --role="${WORDPRESS_USER_ROLE:-editor}" \
+            --user_pass="$USER_PASSWORD" \
+            --allow-root
+    fi
 
     wp rewrite structure '/%postname%/' --allow-root
     wp rewrite flush --allow-root

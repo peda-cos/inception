@@ -52,31 +52,23 @@ Add:
 127.0.0.1   peda-cos.42.fr www.peda-cos.42.fr adminer.peda-cos.42.fr static.peda-cos.42.fr portainer.peda-cos.42.fr
 ```
 
-### 3. Create secrets
+### 3. Secrets (auto-generated)
 
-Secrets are stored as plain text files in `/home/peda-cos/secrets/` on the host. This directory is **not** tracked by git.
+Passwords for the database, WordPress users, and FTP are stored as plain text files in `/home/peda-cos/secrets/` on the host. This directory is **not** tracked by git.
+
+**`make` generates all secret files automatically** the first time it runs — no manual setup required. If the files already exist they are preserved (idempotent). Secrets are generated using `openssl rand`, producing 32-character alphanumeric passwords.
+
+If you want to use custom passwords instead, create any or all of the following files before running `make`:
 
 ```bash
 mkdir -p /home/peda-cos/secrets
-```
 
-Create each file with the appropriate content:
-
-```bash
-# Database user password
-echo "your_db_password_here" > /home/peda-cos/secrets/db_password.txt
-
-# Database root password
-echo "your_root_password_here" > /home/peda-cos/secrets/db_root_password.txt
-
-# FTP user password
-echo "your_ftp_password_here" > /home/peda-cos/secrets/ftp_password.txt
-
-# WordPress admin and editor passwords (key=value format)
-cat > /home/peda-cos/secrets/credentials.txt << 'EOF'
-WORDPRESS_ADMIN_PASSWORD=your_admin_password_here
-WORDPRESS_USER_PASSWORD=your_editor_password_here
-EOF
+# (optional) override any of these — omit to let make generate them
+echo "MyCustomDbPass" > /home/peda-cos/secrets/db_password.txt
+echo "MyCustomRootPass" > /home/peda-cos/secrets/db_root_password.txt
+echo "MyCustomFtpPass" > /home/peda-cos/secrets/ftp_password.txt
+printf 'WORDPRESS_ADMIN_PASSWORD=MyAdminPass\nWORDPRESS_USER_PASSWORD=MyEditorPass\n' \
+  > /home/peda-cos/secrets/credentials.txt
 ```
 
 > **Security**: Never commit the `secrets/` directory or any file containing passwords to version control.
@@ -90,10 +82,11 @@ make
 ```
 
 This will:
-1. Create the data directories at `/home/peda-cos/data/`
-2. Build all Docker images from the `Dockerfile`s
-3. Start all 8 containers in the correct dependency order
-4. Initialize WordPress, MariaDB, and Redis on first run
+1. Generate any missing secret files in `/home/peda-cos/secrets/` (idempotent)
+2. Create the data directories at `/home/peda-cos/data/`
+3. Build all Docker images from the `Dockerfile`s
+4. Start all 8 containers in the correct dependency order
+5. Initialize WordPress, MariaDB, and Redis on first run
 
 **First build takes 5–10 minutes** depending on internet speed.
 
@@ -252,7 +245,7 @@ MariaDB ─(healthy)─→ WordPress ─(healthy)─→ NGINX
 Redis   ─(healthy)─→ WordPress
 Redis   ─(healthy)─→ NGINX
 MariaDB ──────────→ Adminer
-WordPress ────────→ FTP
+WordPress ─(healthy)─→ FTP
 NGINX ────────────→ Portainer
 ```
 

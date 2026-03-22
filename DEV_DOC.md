@@ -50,11 +50,40 @@ inception/
 
 Secrets are plain text files stored at `/home/peda-cos/secrets/` on the host. They are mounted into containers at `/run/secrets/` as read-only in-memory files.
 
-**This directory is not tracked by git.** It must be created manually before the first build.
+**This directory is not tracked by git.** `make` creates it and generates all secret files automatically on first run — no manual setup is required. Existing files are never overwritten (idempotent).
+
+### Auto-generation
+
+The `secrets` target in the Makefile generates 32-character alphanumeric passwords using:
+
+```bash
+openssl rand -base64 48 | tr -d '/+=' | head -c 32
+```
+
+`tr -d '/+='` strips the base64 characters that could cause shell interpretation problems. The result is a 32-character password containing only `[a-zA-Z0-9]`.
+
+The `credentials.txt` file is generated in the required `KEY=VALUE` format with **distinct passwords** for the admin and editor users:
+
+```
+WORDPRESS_ADMIN_PASSWORD=<32-char alphanumeric>
+WORDPRESS_USER_PASSWORD=<32-char alphanumeric>
+```
+
+### Overriding with custom passwords
+
+If you want to use your own passwords, create any or all of the following files **before** running `make`:
 
 ```bash
 mkdir -p /home/peda-cos/secrets
+
+echo "MyCustomDbPass" > /home/peda-cos/secrets/db_password.txt
+echo "MyCustomRootPass" > /home/peda-cos/secrets/db_root_password.txt
+echo "MyCustomFtpPass" > /home/peda-cos/secrets/ftp_password.txt
+printf 'WORDPRESS_ADMIN_PASSWORD=MyAdminPass\nWORDPRESS_USER_PASSWORD=MyEditorPass\n' \
+  > /home/peda-cos/secrets/credentials.txt
 ```
+
+Any file that already exists will be preserved; only missing files are created.
 
 ### File reference
 
@@ -65,28 +94,11 @@ mkdir -p /home/peda-cos/secrets
 | `ftp_password.txt` | plain text (single line) | ftp | vsftpd user password |
 | `credentials.txt` | key=value (two lines) | wordpress | WordPress admin and editor passwords |
 
-### Creating the files
-
-```bash
-# MariaDB user password
-echo "StrongDbPass42!" > /home/peda-cos/secrets/db_password.txt
-
-# MariaDB root password
-echo "StrongRootPass42!" > /home/peda-cos/secrets/db_root_password.txt
-
-# FTP user password
-echo "StrongFtpPass42!" > /home/peda-cos/secrets/ftp_password.txt
-
-# WordPress credentials (key=value format, no quotes)
-cat > /home/peda-cos/secrets/credentials.txt << 'EOF'
-WORDPRESS_ADMIN_PASSWORD=StrongAdminPass42!
-WORDPRESS_USER_PASSWORD=StrongEditorPass42!
-EOF
-```
-
 ### How secrets are consumed
 
-Init scripts use a `read_secret()` shell function that reads a file path from an environment variable (e.g., `MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password`) and returns its contents stripped of trailing newlines. The WordPress `credentials.txt` file uses `grep "^KEY=" | cut -d'=' -f2` for key-value parsing. Secret values never appear in environment variables or `docker inspect` output.
+Init scripts use a `read_secret()` shell function that reads a file path from an environment variable (e.g., `MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password`) and returns its contents stripped of trailing newlines.
+
+The WordPress `credentials.txt` file uses `grep "^KEY=" | cut -d'=' -f2-` for key-value parsing. The `-f2-` (field 2 onwards) ensures passwords containing `=` characters are read correctly — for example, `cut -d'=' -f2-` on `KEY=Pass=word` returns `Pass=word`. Secret values never appear in environment variables or `docker inspect` output.
 
 ---
 
@@ -129,7 +141,8 @@ The Makefile variable `COMPOSE = docker compose -f srcs/docker-compose.yml --env
 
 | Target | Command | Description |
 |--------|---------|-------------|
-| `make` (default) | `make all` | Creates `/home/peda-cos/data/{wordpress,mariadb,redis,portainer}`, then runs `docker compose up -d --build` for all 8 services |
+| `make` (default) | `make all` | Generates missing secrets in `/home/peda-cos/secrets/`, creates `/home/peda-cos/data/{wordpress,mariadb,redis,portainer}`, then runs `docker compose up -d --build` for all 8 services |
+| `make secrets` | — | Generates missing secret files only (no build, no compose) |
 | `make clean` | — | Runs `docker compose down` — stops and removes containers; **volumes and data are preserved** |
 | `make fclean` | — | `clean` + removes volumes (`-v`), stops/removes all containers, runs `docker system prune -a --volumes -f`, **deletes `/home/peda-cos/data/`** |
 | `make re` | — | `fclean` followed by `all` — complete clean rebuild from scratch |
@@ -138,6 +151,7 @@ The Makefile variable `COMPOSE = docker compose -f srcs/docker-compose.yml --env
 
 ```
 make
+  └── secrets target: generate /home/peda-cos/secrets/{db_password,db_root_password,ftp_password,credentials}.txt
   └── mkdir /home/peda-cos/data/{wordpress,mariadb,redis,portainer}
   └── docker compose up -d --build
         ├── Build 8 images from Dockerfiles
@@ -147,8 +161,10 @@ make
         │     └── init.sh: download WP 6.7, create wp-config.php,
         │                   install WP core, create admin + editor users
         ├── Wait for: wordpress (healthy), redis (healthy)
-        ├── Start: nginx, adminer, ftp, static-site, portainer
-        └── All services: restart: unless-stopped
+        ├── Start: nginx, adminer, static-site, portainer
+        ├── Wait for: wordpress (healthy)  ← ftp waits for this
+        └── Start: ftp
+              All services: restart: unless-stopped
 ```
 
 ### Subsequent runs
@@ -191,10 +207,10 @@ All services use `FROM debian:bookworm` as base image.
 - **Packages**: `php8.2-fpm`, `php8.2-mysql`, `php8.2-redis`, and various PHP extensions, plus `wp-cli`
 - **PHP-FPM config**: `conf/www.conf` — listens on `0.0.0.0:9000`, dynamic process manager, OPcache enabled
 - **Initialization** (`tools/init.sh`):
-  1. Reads DB password from secret; reads admin/editor passwords from `credentials` secret (key=value format)
+  1. Reads DB password from secret; reads admin/editor passwords from `credentials` secret (key=value format, parsed via `cut -d'=' -f2-` to handle passwords containing `=`)
   2. Validates admin username does not contain "admin" (rejects with error if it does)
   3. Waits for MariaDB readiness (up to 60 attempts × 2s)
-  4. **First run** (no `wp-config.php`): downloads WordPress 6.7, creates `wp-config.php` via WP-CLI, configures Redis cache settings, installs WordPress core, creates admin and editor users, sets permalink structure
+  4. **First run** (no `wp-config.php`): downloads WordPress 6.7, creates `wp-config.php` via WP-CLI, configures Redis cache settings, installs WordPress core, creates admin user, checks if editor user exists before creating (avoids silent error suppression)
   5. **Restart**: skips initialization
   6. Exec: `php-fpm8.2 -F`
 - **Exposed port**: 9000 (internal only)
@@ -353,6 +369,7 @@ docker inspect --format='{{json .State.Health}}' wordpress | python3 -m json.too
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
+| `docker compose up` fails with "no such file: /home/peda-cos/secrets/..."  | Secret files not generated yet | Run `make secrets` or simply `make` which auto-generates them |
 | WordPress container unhealthy | MariaDB not ready yet | Wait for MariaDB to become healthy; check `docker compose logs mariadb` |
 | `502 Bad Gateway` from NGINX | WordPress PHP-FPM not running | Check `docker compose logs wordpress`; verify port 9000 |
 | FTP connection refused | Passive mode not set in client | Enable passive mode in FTP client; check ports 21100–21110 are mapped |
