@@ -141,6 +141,13 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
 
     wp language core update --allow-root 2>/dev/null || true
 
+    if [ -n "$REDIS_HOST" ]; then
+        echo "[INFO] Installing Redis Object Cache plugin..."
+        wp plugin install redis-cache --activate --allow-root
+        wp redis enable --allow-root 2>/dev/null || true
+        echo "[INFO] Redis Object Cache plugin activated"
+    fi
+
     echo "[INFO] WordPress installed successfully!"
     echo "[INFO] - URL: https://${DOMAIN_NAME}"
     echo "[INFO] - Admin: $WORDPRESS_ADMIN_USER"
