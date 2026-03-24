@@ -5,26 +5,23 @@ SECRETS_PATH = /home/peda-cos/secrets
 all: secrets
 	@mkdir -p $(DATA_PATH)/wordpress
 	@mkdir -p $(DATA_PATH)/mariadb
-	@mkdir -p $(DATA_PATH)/redis
 	@mkdir -p $(DATA_PATH)/portainer
 	@echo "Building and starting all services..."
 	@$(COMPOSE) up -d --build nginx wordpress mariadb redis ftp adminer static-site portainer
 	@echo "Done! WordPress: https://peda-cos.42.fr"
 
+define generate_secret
+	@if [ ! -f $(1) ]; then \
+		openssl rand -base64 48 | tr -d '/+=' | head -c 32 > $(1); \
+		echo "[secrets] Generated $(notdir $(1))"; \
+	fi
+endef
+
 secrets:
 	@mkdir -p $(SECRETS_PATH)
-	@if [ ! -f $(SECRETS_PATH)/db_password.txt ]; then \
-		openssl rand -base64 48 | tr -d '/+=' | head -c 32 > $(SECRETS_PATH)/db_password.txt; \
-		echo "[secrets] Generated db_password.txt"; \
-	fi
-	@if [ ! -f $(SECRETS_PATH)/db_root_password.txt ]; then \
-		openssl rand -base64 48 | tr -d '/+=' | head -c 32 > $(SECRETS_PATH)/db_root_password.txt; \
-		echo "[secrets] Generated db_root_password.txt"; \
-	fi
-	@if [ ! -f $(SECRETS_PATH)/ftp_password.txt ]; then \
-		openssl rand -base64 48 | tr -d '/+=' | head -c 32 > $(SECRETS_PATH)/ftp_password.txt; \
-		echo "[secrets] Generated ftp_password.txt"; \
-	fi
+	$(call generate_secret,$(SECRETS_PATH)/db_password.txt)
+	$(call generate_secret,$(SECRETS_PATH)/db_root_password.txt)
+	$(call generate_secret,$(SECRETS_PATH)/ftp_password.txt)
 	@if [ ! -f $(SECRETS_PATH)/credentials.txt ]; then \
 		printf 'WORDPRESS_ADMIN_PASSWORD=%s\nWORDPRESS_USER_PASSWORD=%s\n' \
 			"$$(openssl rand -base64 48 | tr -d '/+=' | head -c 32)" \

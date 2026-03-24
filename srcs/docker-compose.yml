@@ -39,8 +39,8 @@ services:
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
       - WORDPRESS_DB_HOST=${WORDPRESS_DB_HOST}
-      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
-      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_NAME=${MYSQL_DATABASE}
+      - WORDPRESS_DB_USER=${MYSQL_USER}
       - WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
       - WORDPRESS_TITLE=${WORDPRESS_TITLE}
       - WORDPRESS_ADMIN_USER=${WORDPRESS_ADMIN_USER}
@@ -82,8 +82,6 @@ services:
       - DOMAIN_NAME=${DOMAIN_NAME}
     depends_on:
       wordpress:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsk", "https://localhost/health"]
@@ -147,7 +145,8 @@ services:
     networks:
       - inception
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 10s
@@ -185,8 +184,6 @@ services:
       - portainer_data:/data
     networks:
       - inception
-    depends_on:
-      - nginx
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/api/status"]
       interval: 30s
@@ -217,6 +214,7 @@ volumes:
       device: /home/peda-cos/data/mariadb
 
   portainer_data:
+    name: portainer_data
     driver: local
     driver_opts:
       type: none

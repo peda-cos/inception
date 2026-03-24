@@ -1,0 +1,10 @@
+.git
+.gitignore
+*.md
+README*
+LICENSE
+*.log
+*.tmp
+*.swp
+*~
+*.bak

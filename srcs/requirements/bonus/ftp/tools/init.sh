@@ -3,10 +3,20 @@ set -e
 
 read_secret() {
 	local secret_file="$1"
-	if [ -f "$secret_file" ]; then
-		cat "$secret_file" | tr -d '\n'
-	else
-		echo ""
+	if [ ! -f "$secret_file" ]; then
+		echo "[ERROR] Secret file not found: $secret_file" >&2
+		return 1
+	fi
+	tr -d '\n' < "$secret_file"
+}
+
+require_env() {
+	local var_name="$1"
+	local var_value
+	eval "var_value=\$$var_name"
+	if [ -z "$var_value" ]; then
+		echo "[ERROR] Required environment variable not set: $var_name" >&2
+		exit 1
 	fi
 }
 
@@ -14,10 +24,7 @@ FTP_PASSWORD=$(read_secret "/run/secrets/ftp_password")
 
 FTP_USER="${FTP_USER:-ftpuser}"
 
-if [ -z "$FTP_PASSWORD" ]; then
-	echo "[ERROR] FTP_PASSWORD not defined"
-	exit 1
-fi
+require_env FTP_PASSWORD
 
 echo "[INFO] Configuring FTP user: $FTP_USER"
 

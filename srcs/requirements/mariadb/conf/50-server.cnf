@@ -14,14 +14,10 @@ wait_timeout            = 600
 max_allowed_packet      = 64M
 
 innodb_buffer_pool_size = 128M
-innodb_log_file_size    = 48M
 innodb_file_per_table   = 1
 
 log_error               = /var/lib/mysql/error.log
 slow_query_log          = 0
-
-query_cache_type        = 0
-query_cache_size        = 0
 
 [client]
 socket                  = /var/run/mysqld/mysqld.sock

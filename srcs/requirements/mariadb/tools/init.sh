@@ -3,83 +3,80 @@ set -e
 
 read_secret() {
     local secret_file="$1"
-    if [ -f "$secret_file" ]; then
-        cat "$secret_file" | tr -d '\n'
-    else
-        echo ""
+    if [ ! -f "$secret_file" ]; then
+        echo "[ERROR] Secret file not found: $secret_file" >&2
+        return 1
+    fi
+    tr -d '\n' < "$secret_file"
+}
+
+require_env() {
+    local var_name="$1"
+    local var_value
+    eval "var_value=\$$var_name"
+    if [ -z "$var_value" ]; then
+        echo "[ERROR] Required environment variable not set: $var_name" >&2
+        exit 1
     fi
 }
 
 MYSQL_ROOT_PASSWORD=$(read_secret "${MYSQL_ROOT_PASSWORD_FILE}")
 MYSQL_PASSWORD=$(read_secret "${MYSQL_PASSWORD_FILE}")
 
-if [ -z "$MYSQL_ROOT_PASSWORD" ]; then
-    echo "[ERROR] MYSQL_ROOT_PASSWORD not defined"
-    exit 1
-fi
+require_env MYSQL_ROOT_PASSWORD
+require_env MYSQL_DATABASE
+require_env MYSQL_USER
+require_env MYSQL_PASSWORD
 
-if [ -z "$MYSQL_DATABASE" ]; then
-    echo "[ERROR] MYSQL_DATABASE not defined"
+wait_for_mysqld() {
+    echo "[INFO] Waiting for MariaDB to start..."
+    local i=1
+    while [ "$i" -le 30 ]; do
+        if mysqladmin ping --silent 2>/dev/null; then
+            return 0
+        fi
+        sleep 1
+        i=$((i + 1))
+    done
+    echo "[ERROR] MariaDB did not start correctly" >&2
     exit 1
-fi
+}
 
-if [ -z "$MYSQL_USER" ]; then
-    echo "[ERROR] MYSQL_USER not defined"
-    exit 1
-fi
-
-if [ -z "$MYSQL_PASSWORD" ]; then
-    echo "[ERROR] MYSQL_PASSWORD not defined"
-    exit 1
-fi
+create_db_and_user() {
+    echo "[INFO] Creating database and user..."
+    mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<-EOSQL
+		CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+		CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+		GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+		FLUSH PRIVILEGES;
+	EOSQL
+}
 
 init_database() {
     echo "[INFO] Initializing database..."
 
-    mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null 2>&1
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
 
     echo "[INFO] Starting MariaDB temporarily..."
-
     mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
     pid="$!"
 
-    echo "[INFO] Waiting for MariaDB to start..."
-    for i in $(seq 1 30); do
-        if mysqladmin ping --silent 2>/dev/null; then
-            break
-        fi
-        sleep 1
-    done
-
-    if ! mysqladmin ping --silent 2>/dev/null; then
-        echo "[ERROR] MariaDB did not start correctly"
-        exit 1
-    fi
+    wait_for_mysqld
 
     echo "[INFO] Configuring database..."
 
-    cat << EOF > /tmp/init.sql
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+    mysql <<-EOSQL
+		ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+		FLUSH PRIVILEGES;
+	EOSQL
 
-CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-
-GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
-
-FLUSH PRIVILEGES;
-EOF
-
-    mysql < /tmp/init.sql
-
-    rm -f /tmp/init.sql
+    create_db_and_user
 
     echo "[INFO] Database configured successfully"
     echo "[INFO] - Database: ${MYSQL_DATABASE}"
     echo "[INFO] - User: ${MYSQL_USER}"
 
-    mysqladmin shutdown
-
+    mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
     wait "$pid"
 
     echo "[INFO] Initialization completed"
@@ -91,34 +88,11 @@ setup_database_if_needed() {
     mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
     pid="$!"
 
-    for i in $(seq 1 30); do
-        if mysqladmin ping --silent 2>/dev/null; then
-            break
-        fi
-        sleep 1
-    done
+    wait_for_mysqld
 
-    if ! mysqladmin ping --silent 2>/dev/null; then
-        echo "[ERROR] MariaDB did not start correctly"
-        exit 1
-    fi
-
-    if ! mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "USE ${MYSQL_DATABASE}" 2>/dev/null; then
+    if ! mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "USE \`${MYSQL_DATABASE}\`" 2>/dev/null; then
         echo "[INFO] Database ${MYSQL_DATABASE} does not exist, creating..."
-
-        cat << EOF > /tmp/setup.sql
-CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-
-GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
-
-FLUSH PRIVILEGES;
-EOF
-
-        mysql -u root -p"${MYSQL_ROOT_PASSWORD}" < /tmp/setup.sql
-        rm -f /tmp/setup.sql
-
+        create_db_and_user
         echo "[INFO] Database ${MYSQL_DATABASE} created successfully"
     else
         echo "[INFO] Database ${MYSQL_DATABASE} already exists"
