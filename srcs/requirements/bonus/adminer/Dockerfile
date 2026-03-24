@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN mkdir -p /var/www/html
 
-RUN curl -L https://github.com/vrana/adminer/releases/download/v5.4.0/adminer-5.4.0.php -o /var/www/html/index.php
+RUN curl -L https://github.com/vrana/adminer/releases/download/v5.4.2/adminer-5.4.2.php -o /var/www/html/index.php
 
-RUN curl -L https://raw.githubusercontent.com/vrana/adminer/master/designs/nette/adminer.css -o /var/www/html/adminer.css
+RUN curl -L https://raw.githubusercontent.com/vrana/adminer/v5.4.2/designs/nette/adminer.css -o /var/www/html/adminer.css
 
 RUN chown -R www-data:www-data /var/www/html
 

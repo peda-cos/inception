@@ -8,13 +8,14 @@ character-set-server    = utf8mb4
 collation-server        = utf8mb4_unicode_ci
 
 skip-name-resolve
-max_connections         = 100
+max_connections         = 20
 connect_timeout         = 10
-wait_timeout            = 600
+wait_timeout            = 300
 max_allowed_packet      = 64M
 
 innodb_buffer_pool_size = 128M
 innodb_file_per_table   = 1
+innodb_log_file_size    = 48M
 
 log_error               = /var/lib/mysql/error.log
 slow_query_log          = 0

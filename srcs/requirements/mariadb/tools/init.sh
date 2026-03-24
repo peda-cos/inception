@@ -12,8 +12,7 @@ read_secret() {
 
 require_env() {
     local var_name="$1"
-    local var_value
-    eval "var_value=\$$var_name"
+    local var_value="${!var_name}"
     if [ -z "$var_value" ]; then
         echo "[ERROR] Required environment variable not set: $var_name" >&2
         exit 1
@@ -66,7 +65,7 @@ init_database() {
     echo "[INFO] Configuring database..."
 
     mysql <<-EOSQL
-		ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+		ALTER USER 'root'@'localhost' IDENTIFIED VIA unix_socket OR mysql_native_password USING PASSWORD('${MYSQL_ROOT_PASSWORD}');
 		FLUSH PRIVILEGES;
 	EOSQL
 
@@ -86,7 +85,8 @@ setup_database_if_needed() {
     echo "[INFO] Checking if database ${MYSQL_DATABASE} exists..."
 
     mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking &
-    pid="$!"
+    local MYSQLD_PID="$!"
+    trap 'kill $MYSQLD_PID 2>/dev/null; wait $MYSQLD_PID 2>/dev/null' EXIT
 
     wait_for_mysqld
 
@@ -98,8 +98,9 @@ setup_database_if_needed() {
         echo "[INFO] Database ${MYSQL_DATABASE} already exists"
     fi
 
+    trap - EXIT
     mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
-    wait "$pid"
+    wait "$MYSQLD_PID"
 }
 
 if [ ! -d "/var/lib/mysql/mysql" ]; then

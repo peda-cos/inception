@@ -62,7 +62,7 @@ openssl rand -base64 48 | tr -d '/+=' | head -c 32
 
 `tr -d '/+='` strips the base64 characters that could cause shell interpretation problems. The result is a 32-character password containing only `[a-zA-Z0-9]`.
 
-The `credentials.txt` file is generated in the required `KEY=VALUE` format with **distinct passwords** for the admin and editor users:
+The `credentials.txt` file is generated in the required `KEY=VALUE` format with **distinct passwords** for the admin and subscriber users:
 
 ```
 WORDPRESS_ADMIN_PASSWORD=<32-char alphanumeric>
@@ -121,10 +121,8 @@ Located at `srcs/.env`. Loaded automatically by the Makefile command `docker com
 | `WORDPRESS_ADMIN_EMAIL` | `peda-cos@student.42sp.org.br` | WordPress admin email |
 | `WORDPRESS_USER` | `editor` | WordPress second user username |
 | `WORDPRESS_USER_EMAIL` | `editor@peda-cos.42.fr` | WordPress second user email |
-| `WORDPRESS_USER_ROLE` | `editor` | WordPress second user role |
+| `WORDPRESS_USER_ROLE` | `subscriber` | WordPress second user role |
 | `WORDPRESS_TITLE` | `Inception - peda-cos` | WordPress site title |
-| `NGINX_HOST` | `peda-cos.42.fr` | NGINX `server_name` |
-| `NGINX_PORT` | `443` | NGINX listen port |
 | `REDIS_HOST` | `redis` | Redis service DNS name |
 | `REDIS_PORT` | `6379` | Redis port |
 | `FTP_USER` | `ftpuser` | vsftpd username |
@@ -141,7 +139,7 @@ The Makefile variable `COMPOSE = docker compose -f srcs/docker-compose.yml --env
 
 | Target | Command | Description |
 |--------|---------|-------------|
-| `make` (default) | `make all` | Generates missing secrets in `/home/peda-cos/secrets/`, creates `/home/peda-cos/data/{wordpress,mariadb,redis,portainer}`, then runs `docker compose up -d --build` for all 8 services |
+| `make` (default) | `make all` | Generates missing secrets in `/home/peda-cos/secrets/`, creates `/home/peda-cos/data/{wordpress,mariadb,portainer}`, then runs `docker compose up -d --build` for all 8 services |
 | `make secrets` | — | Generates missing secret files only (no build, no compose) |
 | `make clean` | — | Runs `docker compose down` — stops and removes containers; **volumes and data are preserved** |
 | `make fclean` | — | `clean` + removes volumes (`-v`), stops/removes all containers, runs `docker system prune -a --volumes -f`, **deletes `/home/peda-cos/data/`** |
@@ -152,13 +150,13 @@ The Makefile variable `COMPOSE = docker compose -f srcs/docker-compose.yml --env
 ```
 make
   └── secrets target: generate /home/peda-cos/secrets/{db_password,db_root_password,ftp_password,credentials}.txt
-  └── mkdir /home/peda-cos/data/{wordpress,mariadb,redis,portainer}
+  └── mkdir /home/peda-cos/data/{wordpress,mariadb,portainer}
   └── docker compose up -d --build
         ├── Build 8 images from Dockerfiles
         ├── Start: redis, mariadb (no dependencies)
         ├── Wait for: mariadb (healthy), redis (healthy)
         ├── Start: wordpress
-        │     └── init.sh: download WP 6.7, create wp-config.php,
+        │     └── init.sh: download WP 6.9.4, create wp-config.php,
         │                   install WP core, create admin + editor users
         ├── Wait for: wordpress (healthy), redis (healthy)
         ├── Start: nginx, adminer, static-site, portainer
@@ -210,7 +208,7 @@ All services use `FROM debian:bookworm` as base image.
   1. Reads DB password from secret; reads admin/editor passwords from `credentials` secret (key=value format, parsed via `cut -d'=' -f2-` to handle passwords containing `=`)
   2. Validates admin username does not contain "admin" (rejects with error if it does)
   3. Waits for MariaDB readiness (up to 60 attempts × 2s)
-  4. **First run** (no `wp-config.php`): downloads WordPress 6.7, creates `wp-config.php` via WP-CLI, configures Redis cache settings, installs WordPress core, creates admin user, checks if editor user exists before creating (avoids silent error suppression)
+   4. **First run** (no `wp-config.php`): downloads WordPress 6.9.4, creates `wp-config.php` via WP-CLI, configures Redis cache settings, installs WordPress core, creates admin user, checks if subscriber user exists before creating (avoids silent error suppression)
   5. **Restart**: skips initialization
   6. Exec: `php-fpm8.2 -F`
 - **Exposed port**: 9000 (internal only)
@@ -233,7 +231,7 @@ All services use `FROM debian:bookworm` as base image.
 ### Adminer (Bonus)
 
 - **Packages**: `php8.2-cli`, `php8.2-mysql`, `php8.2-mbstring`, `curl`
-- **Downloads**: Adminer v5.4.0 PHP file + Nette CSS theme
+- **Downloads**: Adminer v5.4.2 PHP file + Nette CSS theme (pinned to v5.4.2)
 - **Runtime**: PHP built-in server `php -S 0.0.0.0:8080 -t /var/www/html`
 - **Exposed port**: 8080 (internal only, proxied via NGINX)
 
@@ -247,10 +245,10 @@ All services use `FROM debian:bookworm` as base image.
 
 ### Portainer (Bonus)
 
-- **Downloads**: Portainer CE v2.33.5 binary to `/opt/portainer/portainer`
+- **Downloads**: Portainer CE v2.39.1 binary to `/opt/portainer/portainer`
 - **Mounts**: Docker socket (`/var/run/docker.sock:ro`) and `portainer_data:/data`
 - **Entrypoint** (`tools/setup.sh`): validates binary and socket, then `exec /opt/portainer/portainer --bind=":9000" --data=/data --no-analytics`
-- **Exposed port**: 9000 (host direct) and proxied via NGINX at `portainer.peda-cos.42.fr`
+- **Exposed port**: 9000 (internal only, proxied via NGINX at `portainer.peda-cos.42.fr`)
 
 ---
 

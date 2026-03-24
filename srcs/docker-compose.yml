@@ -6,6 +6,8 @@ services:
     container_name: mariadb
     image: mariadb:inception
     restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
     networks:
       - inception
     volumes:
@@ -32,6 +34,8 @@ services:
     container_name: wordpress
     image: wordpress:inception
     restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
     networks:
       - inception
     volumes:
@@ -72,14 +76,14 @@ services:
     container_name: nginx
     image: nginx:inception
     restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
     ports:
       - "443:443"
     networks:
       - inception
     volumes:
       - wordpress_data:/var/www/html:ro
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
     depends_on:
       wordpress:
         condition: service_healthy
@@ -97,6 +101,8 @@ services:
     container_name: redis
     image: redis:inception
     restart: unless-stopped
+    mem_limit: 192m
+    cpus: 0.25
     networks:
       - inception
     healthcheck:
@@ -113,6 +119,8 @@ services:
     container_name: ftp
     image: ftp:inception
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
     ports:
       - "21:21"
       - "21100-21110:21100-21110"
@@ -142,6 +150,8 @@ services:
     container_name: adminer
     image: adminer:inception
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
     networks:
       - inception
     depends_on:
@@ -161,6 +171,8 @@ services:
     container_name: static-site
     image: static-site:inception
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
     networks:
       - inception
     healthcheck:
@@ -177,8 +189,8 @@ services:
     container_name: portainer
     image: portainer:inception
     restart: unless-stopped
-    ports:
-      - "9000:9000"
+    mem_limit: 256m
+    cpus: 0.5
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - portainer_data:/data
@@ -223,10 +235,10 @@ volumes:
 
 secrets:
   db_password:
-    file: /home/peda-cos/secrets/db_password.txt
+    file: ../secrets/db_password.txt
   db_root_password:
-    file: /home/peda-cos/secrets/db_root_password.txt
+    file: ../secrets/db_root_password.txt
   credentials:
-    file: /home/peda-cos/secrets/credentials.txt
+    file: ../secrets/credentials.txt
   ftp_password:
-    file: /home/peda-cos/secrets/ftp_password.txt
+    file: ../secrets/ftp_password.txt

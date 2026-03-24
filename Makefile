@@ -1,6 +1,6 @@
 COMPOSE = docker compose -f srcs/docker-compose.yml --env-file srcs/.env
 DATA_PATH = /home/peda-cos/data
-SECRETS_PATH = /home/peda-cos/secrets
+SECRETS_PATH = $(PWD)/secrets
 
 all: secrets
 	@mkdir -p $(DATA_PATH)/wordpress

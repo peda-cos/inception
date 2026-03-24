@@ -22,8 +22,7 @@ read_credentials() {
 
 require_env() {
     local var_name="$1"
-    local var_value
-    eval "var_value=\$$var_name"
+    local var_value="${!var_name}"
     if [ -z "$var_value" ]; then
         echo "[ERROR] Required environment variable not set: $var_name" >&2
         exit 1
@@ -74,7 +73,7 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
 
     if [ ! -f "/var/www/html/wp-load.php" ]; then
         echo "[INFO] Downloading WordPress..."
-        wp core download --allow-root --locale=en_US --version=6.7
+        wp core download --allow-root --locale=en_US --version=6.9.4
     fi
 
     echo "[INFO] Creating wp-config.php..."
@@ -115,7 +114,7 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
         wp user create \
             "$WORDPRESS_USER" \
             "$WORDPRESS_USER_EMAIL" \
-            --role="${WORDPRESS_USER_ROLE:-editor}" \
+            --role="${WORDPRESS_USER_ROLE:-subscriber}" \
             --user_pass="$USER_PASSWORD" \
             --allow-root
     fi
@@ -123,7 +122,7 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
     wp rewrite structure '/%postname%/' --allow-root
     wp rewrite flush --allow-root
 
-    wp theme activate twentytwentythree --allow-root || echo "[WARN] theme activation failed (non-critical)"
+    wp theme activate twentytwentyfive --allow-root || echo "[WARN] theme activation failed (non-critical)"
 
     wp language core update --allow-root || echo "[WARN] language update failed (non-critical)"
 
