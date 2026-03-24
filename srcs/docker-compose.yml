@@ -80,8 +80,6 @@ services:
       - wordpress_data:/var/www/html:ro
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
-      - REDIS_HOST=${REDIS_HOST:-}
-      - REDIS_PORT=${REDIS_PORT:-}
     depends_on:
       wordpress:
         condition: service_healthy

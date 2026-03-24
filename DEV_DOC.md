@@ -232,7 +232,7 @@ All services use `FROM debian:bookworm` as base image.
 
 ### Adminer (Bonus)
 
-- **Packages**: `php8.2-cli`, `php8.2-fpm`, `php8.2-mysql`, `php8.2-mbstring`, `curl`
+- **Packages**: `php8.2-cli`, `php8.2-mysql`, `php8.2-mbstring`, `curl`
 - **Downloads**: Adminer v5.4.0 PHP file + Nette CSS theme
 - **Runtime**: PHP built-in server `php -S 0.0.0.0:8080 -t /var/www/html`
 - **Exposed port**: 8080 (internal only, proxied via NGINX)
